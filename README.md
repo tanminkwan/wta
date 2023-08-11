@@ -1,0 +1,2 @@
+# wta
+Winner takes all
