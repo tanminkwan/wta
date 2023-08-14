@@ -16,12 +16,14 @@ AGENT_NAME = os.environ.get('AGENT_NAME') or \
 AGENT_ROLES = os.environ.get('AGENT_ROLES') or \
     os.path.basename(__main__.__file__).split('.')[0]
 
-#hosts
+#Infra hosts
 ZIPKIN_DOMAIN_NAME = os.environ.get('ZIPKIN_DOMAIN_NAME') or 'localhost'
 ZIPKIN_PORT =  os.environ.get('ZIPKIN_PORT') or '9411'
 ZIPKIN_ADDRESS = (ZIPKIN_DOMAIN_NAME,int(ZIPKIN_PORT))
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get('KAFKA_BOOTSTRAP_SERVERS') or 'localhost:9092'
 KAFKA_BOOTSTRAP_SERVERS = KAFKA_BOOTSTRAP_SERVERS.split(',')
+ELASTIC_SEARCH_DOMAIN_NAME = os.environ.get('ELASTIC_SEARCH_DOMAIN_NAME') or 'localhost'
+ELASTIC_SEARCH_PORT = os.environ.get('ELASTIC_SEARCH_PORT') or '9200'
 
 print("MESSAGE_RECEIVER_ENABLED : ", MESSAGE_RECEIVER_ENABLED)
 print("AGENT_NAME : ", AGENT_NAME)
@@ -58,10 +60,18 @@ C_SERVICE_ENDPOINT =\
     "openai_agent":OPENAI_AGENT_SERVICE_ADDRESS+"/api/v1",
     "betting_booth":BETTING_BOOTH_SERVICE_ADDRESS+"/api/v1",
     "k8s_agent":K8S_AGENT_SERVICE_ADDRESS+"/api/v1",
-    "elasticsearch_agent":ELASTICSEARCH_AGENT_SERVICE_ADDRESS+"/api/v1",
+    "opensearch_agent":ELASTICSEARCH_AGENT_SERVICE_ADDRESS+"/api/v1",
     "game_manager":GAME_MANAGER_SERVICE_ADDRESS+"/api/v1",
     "game_panel":GAME_PANEL_SERVICE_ADDRESS+"/api/v1",
 }
+
+PREWORK =\
+[
+    {
+        "executer":"wta.executer.calculator.Prework",
+        "agent_roles":["calculator"],
+    }
+]
 
 EXECUTERS_BY_TOPIC =\
 [
