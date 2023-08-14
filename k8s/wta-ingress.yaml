@@ -1,0 +1,110 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: wta-gateway
+  namespace: wta
+spec:
+  # The selector matches the ingress gateway pod labels.
+  # If you installed Istio using Helm following the standard documentation, this would be "istio=ingress"
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "wta-admin.leebalso.org"
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "wta.leebalso.org"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: wta-game-panel
+spec:
+  hosts:
+  - "wta.leebalso.org"
+  gateways:
+  - wta-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api/v1/game_panel
+    - headers:
+        x-class:
+          exact: "vip"
+    route:
+    - destination:
+        host: game-panel
+        subset: vip
+        port:
+          number: 5000
+  - match:
+    - uri:
+        prefix: /api/v1/game_panel
+    route:
+    - destination:
+        host: game-panel
+        subset: normal
+        port:
+          number: 5000
+  - match:
+    - uri:
+        exact: /
+    - uri:
+        exact: ""
+    #rewrite:
+    #  uri: /waiting.html?countdown=600
+    route:
+    - destination:
+        host: game-ui
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: wta-game-manager
+spec:
+  hosts:
+  - "wta-admin.leebalso.org"
+  gateways:
+  - wta-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api/v1/game_manager
+    route:
+    - destination:
+        host: game-manager
+        port:
+          number: 5000
+  - match:
+    - uri:
+        prefix: /
+    rewrite:
+      uri: /admin
+    route:
+    - destination:
+        host: game-ui
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: dr-game-panel
+spec:
+  host: game-panel
+  subsets:
+  - name: vip
+    labels:
+      version: vip
+  - name: normal
+    labels:
+      version: normal
