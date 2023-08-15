@@ -51,7 +51,7 @@ C_OPENAI_API_KEY = "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"
 C_GAME_ID = os.environ.get('GAME_ID') or "test_game"
 C_ACCOUNT_ID = os.environ.get('ACCOUNT_ID') or "test_account"
 C_BET_SEQ = 0
-C_DEPOSIT_BALANCE = 100000
+C_DEPOSIT_AMOUNT = 20000
 C_BET_CYCLE_SEC = 20
 C_BET_AMOUNT = 5000
 
@@ -85,7 +85,7 @@ EXECUTERS_BY_TOPIC =\
     "executer":"wta.executer.service_manager.Deposit",
     "agent_roles":["service_manager"]},
     {"topic":"wta.bet",
-    "executer":"wta.executer.calculator.Bet",
+    "executer":"wta.executer.calculator.Calculator",
     "agent_roles":["calculator"]},
     {"topic":"wta.calc.bet",
     "executer":"wta.executer.raffle.CalcBet",
@@ -96,7 +96,7 @@ EXECUTERS_BY_TOPIC =\
 SCHEDULER_TIMEZONE = "Asia/Seoul" 
 SCHEDULER_API_ENABLED = True
 #EXIT_AFTER_JOBS = os.getenv("EXIT_AFTER_JOBS", 'false').lower() in ('true', '1', 't')
-EXIT_AFTER_JOBS = True if AGENT_ROLES in ('betting_agent','fallbacj') else False
+EXIT_AFTER_JOBS = True if AGENT_ROLES in ('betting_agent','fallback') else False
 SCHEDULED_JOBS =\
 [
     {
@@ -107,7 +107,6 @@ SCHEDULED_JOBS =\
         "seconds":C_BET_CYCLE_SEC,
         "params":{"bet_amount":C_BET_AMOUNT},
         "start_date":datetime.now()+timedelta(minutes=1),
-        "end_date":datetime.now()+timedelta(minutes=5),
         "agent_roles":["betting_agent"],
     },
 ]
