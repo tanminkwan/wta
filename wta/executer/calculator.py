@@ -16,15 +16,16 @@ class Prework(ExecuterInterface):
         url = "http://"+_get_url('opensearch_agent')\
                  +"/opensearch/latest_calc_bet/" + configure.get('C_GAME_ID')
         
-        rtn, results = rest_caller.call_get(url=url)
+        rtn, result = rest_caller.call_get(url=url)
 
         tot = {}
 
+        print("call opensearch :", rtn, result)
         if rtn >= 200 and rtn < 300:
-            tot['accounts']       = results.get('accounts') 
-            tot['tot_bet_count']      = results.get('total_bet_count')
-            tot['tot_bet_amount']     = results.get('total_bet_amount')
-            tot['tot_deposit_amount'] = results.get('total_deposit_amount')
+            tot['accounts']       = result.get('accounts') 
+            tot['tot_bet_count']      = result.get('tot_bet_count')
+            tot['tot_bet_amount']     = result.get('tot_bet_amount')
+            tot['tot_deposit_amount'] = result.get('tot_deposit_amount')
         else:
             tot['accounts']           = set()
             tot['tot_bet_count']      = 0
@@ -44,9 +45,9 @@ class Prework(ExecuterInterface):
 
         configure['C_STAT'] = tot
 
-        results.update(tot)
+        result.update(tot)
 
-        return rtn, results
+        return rtn, result
     
 class Calculator(ExecuterInterface):
 

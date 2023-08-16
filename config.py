@@ -11,10 +11,9 @@ MESSAGE_RECEIVER_ENABLED = \
 
 import __main__
 AGENT_NAME = os.environ.get('AGENT_NAME') or \
-    os.path.basename(__main__.__file__).split('.')[0]
+    os.path.basename(__main__.__file__).rsplit('.',1)[0]
 
-AGENT_ROLES = os.environ.get('AGENT_ROLES') or \
-    os.path.basename(__main__.__file__).split('.')[0]
+AGENT_ROLES = os.environ.get('AGENT_ROLES') or AGENT_NAME.split('.')[0]
 
 #Infra hosts
 ZIPKIN_DOMAIN_NAME = os.environ.get('ZIPKIN_DOMAIN_NAME') or 'localhost'
@@ -49,11 +48,57 @@ GAME_PANEL_SERVICE_ADDRESS = \
 C_OPENAI_API_KEY = "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"
 
 C_GAME_ID = os.environ.get('GAME_ID') or "test_game"
-C_ACCOUNT_ID = os.environ.get('ACCOUNT_ID') or "test_account"
+C_ACCOUNT_ID = os.environ.get('ACCOUNT_ID') or AGENT_NAME
 C_BET_SEQ = 0
-C_DEPOSIT_AMOUNT = 20000
+C_DEPOSIT_AMOUNT = 53000
 C_BET_CYCLE_SEC = 20
 C_BET_AMOUNT = 5000
+
+_str_raffle_rule_comon = \
+"""
+def f( bet_seq:int=0, 
+       bet_amount:int=0, 
+       deposit_amount:int=0, 
+       deposit_balance:int=0, 
+       tot_deposit_amount:int=0,
+       tot_deposit_balance:int=0, 
+       avg_bet_amount_per_account:int=0, 
+       avg_bet_amount_per_round:int=0, 
+       tot_bet_amount:int=0, 
+       tot_bet_count:int=0, 
+       avg_deposit_amount_per_account:int=0, 
+       account_count:int=0):
+"""
+_str_raffle_rule_1 = \
+_str_raffle_rule_comon + \
+"""
+    if tot_bet_amount/tot_deposit_amount > 0.9:
+        return True
+    return False
+"""
+_str_raffle_rule_2 = \
+_str_raffle_rule_comon + \
+"""
+    if deposit_balance == 0:
+        return True
+    return False
+"""
+
+C_RAFFLE_RULES = os.environ.get('RAFFLE_RULES') or \
+[
+    {"raffle_rule_id":"winner",
+     "code":_str_raffle_rule_1,
+     "winning_type":"percentage",
+     "winning_point":50,
+     "winner_count":1,
+     "remaining_winner_count":1},
+    {"raffle_rule_id":"fast_bettor",
+     "code":_str_raffle_rule_2,
+     "winning_type":"quantity",
+     "winning_point":50000,
+     "winner_count":2,
+     "remaining_winner_count":2},
+]
 
 C_SERVICE_ENDPOINT =\
 {
@@ -88,7 +133,7 @@ EXECUTERS_BY_TOPIC =\
     "executer":"wta.executer.calculator.Calculator",
     "agent_roles":["calculator"]},
     {"topic":"wta.calc.bet",
-    "executer":"wta.executer.raffle.CalcBet",
+    "executer":"wta.executer.raffle.Raffle",
     "agent_roles":["raffle"]},
 ]
 
