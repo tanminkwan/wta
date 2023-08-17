@@ -47,7 +47,7 @@ GAME_PANEL_SERVICE_ADDRESS = \
 #Custom defined valuables
 C_OPENAI_API_KEY = "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"
 
-C_GAME_ID = os.environ.get('GAME_ID') or "test_game"
+C_GAME_ID = os.environ.get('GAME_ID') or "test_game2"
 C_ACCOUNT_ID = os.environ.get('ACCOUNT_ID') or AGENT_NAME
 C_BET_SEQ = 0
 C_DEPOSIT_AMOUNT = 53000
@@ -115,7 +115,15 @@ PREWORK =\
     {
         "executer":"wta.executer.calculator.Prework",
         "agent_roles":["calculator"],
-    }
+    },
+    {
+        "executer":"wta.executer.raffle.Prework",
+        "agent_roles":["raffle"],
+    },
+    {
+        "executer":"wta.executer.betting_agent.Prework",
+        "agent_roles":["betting_agent"],
+    },
 ]
 
 EXECUTERS_BY_TOPIC =\

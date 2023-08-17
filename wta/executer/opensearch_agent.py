@@ -5,18 +5,18 @@ from miniagent.adapters.opensearch_caller import OpensearchCaller
 url = "http://"+configure.get('ELASTIC_SEARCH_DOMAIN_NAME')\
             +":"+configure.get('ELASTIC_SEARCH_PORT')
 
-class FilterEqual(ExecuterInterface):
+class Query(ExecuterInterface):
 
     def _parcer(self, response):
 
-        results = []
         if not response['hits']['hits']:
             return {"results":[]}
+
+        results = []
         
         for q in response['hits']['hits']:
             results.append(q['_source'])
 
-        print("### FilterEqual results : ", results)
         return {"results":results}
 
     def execute_command(self, 
@@ -52,37 +52,13 @@ class FilterEqual(ExecuterInterface):
                 sort = initial_param['sort_condition'])
             )
 
-        print("### FilterEqual query : ", query)
+        if initial_param.get('size'):
 
-        return os_caller.call_get(url, index, query, self._parcer)
+            query.update(dict(
+                size = initial_param['size'])
+            )
 
-class Latest(ExecuterInterface):
-
-    def _parcer(self, response):
-
-        if not response['hits']['hits']:
-            return {"result":{}}
-        
-        q = response['hits']['hits'][0]['_source']
-
-        return q
-
-    def execute_command(self, 
-                            initial_param: dict,
-                            os_caller: OpensearchCaller,
-                        ) -> tuple[int, dict]:
-        
-        index = initial_param['index']
-        query =\
-        {
-            "query": {
-                "match": {
-                    "game_id": initial_param['game_id']
-                }
-            },
-            "size": 1,
-            "sort": { "calc_date": "desc"},
-        }
+        print("### query : ", query)
 
         return os_caller.call_get(url, index, query, self._parcer)
 

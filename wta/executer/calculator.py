@@ -21,7 +21,7 @@ class Prework(ExecuterInterface):
         tot = {}
 
         print("call opensearch :", rtn, result)
-        if rtn >= 200 and rtn < 300:
+        if rtn == 200 and result.get('account'):
             tot['accounts']       = result.get('accounts') 
             tot['tot_bet_count']      = result.get('tot_bet_count')
             tot['tot_bet_amount']     = result.get('tot_bet_amount')
