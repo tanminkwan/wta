@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+from random import randrange
 
 #DEBUG
 DEBUG = os.getenv("DEBUG", 'True').lower() in ('true', '1', 't')
@@ -45,14 +46,14 @@ GAME_PANEL_SERVICE_ADDRESS = \
     os.environ.get('GAME_PANEL_SERVICE_ADDRESS') or 'localhost:5016'
 
 #Custom defined valuables
-C_OPENAI_API_KEY = "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"
+C_OPENAI_API_KEY = "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"
 
-C_GAME_ID = os.environ.get('GAME_ID') or "test_game2"
+C_GAME_ID = os.environ.get('GAME_ID') or "test_game5"
 C_ACCOUNT_ID = os.environ.get('ACCOUNT_ID') or AGENT_NAME
 C_BET_SEQ = 0
 C_DEPOSIT_AMOUNT = 53000
-C_BET_CYCLE_SEC = 20
-C_BET_AMOUNT = 5000
+C_BET_CYCLE_SEC = randrange(20, 60, 10)
+C_BET_AMOUNT = randrange(3000, 10000, 1000)
 
 _str_raffle_rule_comon = \
 """
@@ -83,6 +84,13 @@ _str_raffle_rule_comon + \
         return True
     return False
 """
+_str_raffle_rule_3 = \
+_str_raffle_rule_comon + \
+"""
+    if tot_deposit_balance <= 0:
+        return True
+    return False
+"""
 
 C_RAFFLE_RULES = os.environ.get('RAFFLE_RULES') or \
 [
@@ -98,6 +106,13 @@ C_RAFFLE_RULES = os.environ.get('RAFFLE_RULES') or \
      "winning_point":50000,
      "winner_count":2,
      "remaining_winner_count":2},
+    {"raffle_rule_id":"no_more_diposit",
+     "code":_str_raffle_rule_3,
+     "winning_type":"quantity",
+     "winning_point":0,
+     "winner_count":1,
+     "remaining_winner_count":1,
+     "end_immediately":True},
 ]
 
 C_SERVICE_ENDPOINT =\

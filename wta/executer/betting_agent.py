@@ -43,8 +43,6 @@ class RequestBet(ExecuterInterface):
 
         if configure['C_DEPOSIT_BALANCE'] - configure['C_BET_AMOUNT'] <= 0:
             is_lasttime = True
-
-        if is_lasttime:
             bet_amount = configure['C_DEPOSIT_BALANCE']
         else:
             bet_amount = configure['C_BET_AMOUNT']

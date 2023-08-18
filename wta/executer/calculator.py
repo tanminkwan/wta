@@ -56,9 +56,12 @@ class Calculator(ExecuterInterface):
                             producer: KafkaProducerAdapter,
                         ) -> tuple[int, dict]:
         
-        topic = 'wta.calc.bet'
-        print("## initial_param : ", initial_param)
 
+        topic = 'wta.calc.bet'
+
+        if initial_param.get('game_id') != configure.get('C_GAME_ID'):
+            return 0, {'message':'Game Id is wrong.'}
+        
         message = self._calculate_tot(initial_param.copy())
         
         print("## message : ", message)
@@ -77,8 +80,8 @@ class Calculator(ExecuterInterface):
         if bet['account_id'] not in stat['accounts']:
             stat['tot_deposit_amount']  += bet['deposit_amount']
             stat['tot_deposit_balance'] += bet['deposit_amount']
+            stat['accounts'].add(bet['account_id'])
 
-        stat['accounts'].add(bet['account_id'])
         stat['tot_bet_count']       += 1
         stat['tot_bet_amount']      += bet['bet_amount']
         stat['tot_deposit_balance'] -= bet['bet_amount']

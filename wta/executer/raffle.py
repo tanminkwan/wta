@@ -48,7 +48,9 @@ class Raffle(ExecuterInterface):
                         ) -> tuple[int, dict]:
         
         topic = 'wta.raffle'
-        print("## initial_param : ", initial_param)
+        
+        if initial_param.get('game_id') != configure.get('C_GAME_ID'):
+            return 0, {'message':'Game Id is wrong.'}
 
         is_raffled, message = self._check_raffle_rules(initial_param.copy())
         
@@ -90,6 +92,7 @@ class Raffle(ExecuterInterface):
                 raffle_rule_id = rr['raffle_rule_id'],
                 winner_count = rr['winner_count'],
                 remaining_winner_count = rr['remaining_winner_count'],
+                end_immediately = rr['end_immediately'] if rr.get('end_immediately') else False
             )
 
             calc_bet['status'].append(t)
