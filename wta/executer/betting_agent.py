@@ -2,9 +2,8 @@ from miniagent import configure
 from miniagent.executer import ExecuterInterface
 from miniagent.adapters.rest_caller import RESTCaller
 import logging
-import os
 
-from . import _get_url
+from . import _get_url, _get_game_info
 
 class Prework(ExecuterInterface):
 
@@ -13,6 +12,23 @@ class Prework(ExecuterInterface):
                             rest_caller: RESTCaller,
                         ) -> tuple[int, dict]:
 
+        rtn, game_info = _get_game_info()
+
+        if rtn!=200:
+            logging.error("_get_game_info error. rtn : ", str(rtn))
+            return -1, {}
+
+        if game_info.get('game_status') == 'publish':
+            logging.error("The game hasn't started yet!!")
+            return -1, {}
+
+        if game_info.get('game_status') == 'end':
+            logging.error("Game is over!!")
+            return -1, {}
+
+        configure['C_GAME_ID'] = game_info['game_id']
+        configure['C_GAME_NAME'] = game_info['game_name']
+        
         url = "http://"+_get_url('opensearch_agent')\
                  +"/opensearch/latest_bet/" + configure.get('C_GAME_ID') + '/' \
                  + configure.get('C_ACCOUNT_ID')
@@ -22,8 +38,8 @@ class Prework(ExecuterInterface):
         if rtn == 200 and result.get('account_id'):
 
             if result['deposit_balance'] <= 0:
-                logging.info("deposit_balance is zero.")
-                os._exit(1)
+                logging.error("deposit_balance is zero.")
+                return -1, {}
 
             configure['C_DEPOSIT_BALANCE'] = result['deposit_balance']
             configure['C_BET_SEQ'] = result['bet_seq']
@@ -52,7 +68,9 @@ class RequestBet(ExecuterInterface):
         
         param = dict(
             game_id = configure.get('C_GAME_ID'),
+            game_name = configure.get('C_GAME_NAME'),
             account_id = configure.get('C_ACCOUNT_ID'),
+            game_user_name = configure.get('C_GAME_USER_NAME'),
             bet_seq = bet_seq,
             bet_amount = bet_amount,
             deposit_balance = deposit_balance,

@@ -10,14 +10,15 @@ class Query(ExecuterInterface):
     def _parcer(self, response):
 
         if not response['hits']['hits']:
-            return {"results":[]}
+            return 0, {"results":[]}
 
         results = []
         
         for q in response['hits']['hits']:
             results.append(q['_source'])
+            rtn = 1
 
-        return {"results":results}
+        return 1, {"results":results}
 
     def execute_command(self, 
                             initial_param: dict,

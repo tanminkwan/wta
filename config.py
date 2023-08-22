@@ -44,16 +44,21 @@ GAME_MANAGER_SERVICE_ADDRESS = \
     os.environ.get('GAME_MANAGER_SERVICE_ADDRESS') or 'localhost:5015'
 GAME_PANEL_SERVICE_ADDRESS = \
     os.environ.get('GAME_PANEL_SERVICE_ADDRESS') or 'localhost:5016'
+CONFIG_MAP_SERVICE_ADDRESS = \
+    os.environ.get('CONFIG_MAP_SERVICE_ADDRESS') or 'localhost:5017'
 
 #Custom defined valuables
 C_OPENAI_API_KEY = "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"
 
-C_GAME_ID = os.environ.get('GAME_ID') or "test_game5"
+#C_GAME_ID = os.environ.get('GAME_ID') or "ec20fee9e8ee42dd92afaca3a89feafd"
+#C_GAME_NAME = os.environ.get('GAME_NAME') or "test_game7"
 C_ACCOUNT_ID = os.environ.get('ACCOUNT_ID') or AGENT_NAME
+C_GAME_USER_NAME = os.environ.get('ACCOUNT_ID') or AGENT_NAME + '_형기'
 C_BET_SEQ = 0
-C_DEPOSIT_AMOUNT = 53000
-C_BET_CYCLE_SEC = randrange(20, 60, 10)
-C_BET_AMOUNT = randrange(3000, 10000, 1000)
+C_DEPOSIT_AMOUNT = int(os.environ.get('C_DEPOSIT_AMOUNT', str(53000)))
+C_BET_CYCLE_SEC = int(os.environ.get('C_BET_CYCLE_SEC', str(randrange(20, 60, 10))))
+C_BET_AMOUNT = int(os.environ.get('C_BET_AMOUNT', str(randrange(3000, 10000, 1000))))
+C_START_SECS = int(os.environ.get('C_START_SECS', '30'))
 
 _str_raffle_rule_comon = \
 """
@@ -92,21 +97,22 @@ _str_raffle_rule_comon + \
     return False
 """
 
+"""
 C_RAFFLE_RULES = os.environ.get('RAFFLE_RULES') or \
 [
-    {"raffle_rule_id":"winner",
+    {"rule_name":"winner",
      "code":_str_raffle_rule_1,
      "winning_type":"percentage",
      "winning_point":50,
      "winner_count":1,
      "remaining_winner_count":1},
-    {"raffle_rule_id":"fast_bettor",
+    {"rule_name":"fast_bettor",
      "code":_str_raffle_rule_2,
      "winning_type":"quantity",
      "winning_point":50000,
      "winner_count":2,
      "remaining_winner_count":2},
-    {"raffle_rule_id":"no_more_diposit",
+    {"rule_name":"no_more_diposit",
      "code":_str_raffle_rule_3,
      "winning_type":"quantity",
      "winning_point":0,
@@ -114,7 +120,7 @@ C_RAFFLE_RULES = os.environ.get('RAFFLE_RULES') or \
      "remaining_winner_count":1,
      "end_immediately":True},
 ]
-
+"""
 C_SERVICE_ENDPOINT =\
 {
     "openai_agent":OPENAI_AGENT_SERVICE_ADDRESS+"/api/v1",
@@ -123,6 +129,7 @@ C_SERVICE_ENDPOINT =\
     "opensearch_agent":ELASTICSEARCH_AGENT_SERVICE_ADDRESS+"/api/v1",
     "game_manager":GAME_MANAGER_SERVICE_ADDRESS+"/api/v1",
     "game_panel":GAME_PANEL_SERVICE_ADDRESS+"/api/v1",
+    "config_map":CONFIG_MAP_SERVICE_ADDRESS+"/api/v1",
 }
 
 PREWORK =\
@@ -144,7 +151,7 @@ PREWORK =\
 EXECUTERS_BY_TOPIC =\
 [
     {"topic":"wta.raffle",
-    "executer":"wta.executer.game_manager.Raffle",
+    "executer":"wta.executer.game_manager.End",
     "agent_roles":["game_manager"]},
     {"topic":"wta.game.status",
     "executer":"wta.executer.service_manager.Status",
@@ -174,7 +181,8 @@ SCHEDULED_JOBS =\
         "name":"Request Bet",
         "seconds":C_BET_CYCLE_SEC,
         "params":{"bet_amount":C_BET_AMOUNT},
-        "start_date":datetime.now()+timedelta(minutes=1),
+        "start_date":datetime.now()+timedelta(seconds=C_START_SECS),
         "agent_roles":["betting_agent"],
     },
 ]
+# job list : /scheduler/jobs

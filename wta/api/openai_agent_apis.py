@@ -1,7 +1,7 @@
-from flask import request, make_response
+from flask import request
 from flask_restful import reqparse
 from flask_api import status
-from miniagent import api
+from miniagent import api, app
 from miniagent.executer import ExecuterCaller
 from miniagent.event_receiver import Resource
 

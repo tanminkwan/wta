@@ -7,7 +7,7 @@ $ get clone https://github.com/tanminkwan/wta.git
 ```
 ## Execute docker compose files
 ```
-$ docker compose -f docker-compose-kafka.yml -f docker-compose-opensearch.yml -f docker-compose-zipkin.yml -f docker-compose.yml up -d
+$ docker compose -f docker-compose-kafka.yml -f docker-compose-opensearch.yml -f docker-compose-zipkin.yml -f docker-compose-wta.yml up -d
 ```
 ## Check all 12 containers
 ```
