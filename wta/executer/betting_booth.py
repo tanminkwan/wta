@@ -2,7 +2,6 @@ from miniagent import configure
 from miniagent.executer import ExecuterInterface
 from miniagent.adapters.kafka_producer import KafkaProducerAdapter
 
-import uuid
 from datetime import datetime
 
 class Bet(ExecuterInterface):

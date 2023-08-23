@@ -146,6 +146,10 @@ PREWORK =\
         "executer":"wta.executer.betting_agent.Prework",
         "agent_roles":["betting_agent"],
     },
+    {
+        "executer":"wta.executer.fallback.Prework",
+        "agent_roles":["fallback"],
+    },
 ]
 
 EXECUTERS_BY_TOPIC =\

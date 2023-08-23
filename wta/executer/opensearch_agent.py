@@ -30,33 +30,33 @@ class Query(ExecuterInterface):
         {
             "query": {
                 "bool": {
-                    "must": [
-                        {
-                            "match": {
-                                "game_id": initial_param['game_id']
-                            }
-                        }
-                    ]
+                    "must": []
                 }
             }
         }
 
-        if initial_param.get('filter_conditions'):
+        if initial_param.get('bool'):
                     
-            for q in initial_param['filter_conditions']:
+            for q in initial_param['bool']:
 
                 query['query']['bool']['must'].append({"match": q})
         
-        if initial_param.get('sort_condition'):
+        if initial_param.get('sort'):
 
             query.update(dict(
-                sort = initial_param['sort_condition'])
+                sort = initial_param['sort'])
             )
 
         if initial_param.get('size'):
 
             query.update(dict(
                 size = initial_param['size'])
+            )
+
+        if initial_param.get('range'):
+
+            query['query']['bool']['must'].append(dict(
+                range = initial_param['range'])
             )
 
         print("### query : ", query)

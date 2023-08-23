@@ -10,9 +10,9 @@ class GameStatus(Resource):
 
         data = dict(
             initial_param = dict(
-                game_id = game_id ,
                 index = 'wta.game.status',
-                filter_conditions = [
+                bool = [
+                    {"game_id":game_id},
                     {"game_status": game_status},
                 ],
             ),
@@ -37,12 +37,12 @@ class LatestBet(Resource):
 
         data = dict(
             initial_param = dict(
-                game_id = game_id ,
                 index = 'wta.bet',
-                sort_condition = { "bet_date": "desc"},
-                filter_conditions = [
+                bool = [
                     {"account_id": account_id},
+                    {"game_id":game_id}
                 ],
+                sort = { "bet_date": "desc"},
                 size = 1,
             ),
             executer = 'wta.executer.opensearch_agent.Query',
@@ -67,9 +67,11 @@ class LatestCalcBet(Resource):
 
         data = dict(
             initial_param = dict(
-                game_id = game_id ,
                 index = 'wta.calc.bet',
-                sort_condition = {"calc_date": "desc"},
+                bool = [
+                    {"game_id":game_id}
+                ],
+                sort = {"calc_date": "desc"},
                 size = 1
             ),
             executer = 'wta.executer.opensearch_agent.Query',
@@ -110,9 +112,11 @@ class LatestRaffle(Resource):
 
         data = dict(
             initial_param = dict(
-                game_id = game_id ,
                 index = 'wta.raffle',
-                sort_condition = { "raffle_date": "desc"},
+                bool = [
+                    {"game_id":game_id}
+                ],
+                sort = { "raffle_date": "desc"},
                 size = 1,
             ),
             executer = 'wta.executer.opensearch_agent.Query',
@@ -136,8 +140,10 @@ class RaffleList(Resource):
 
         data = dict(
             initial_param = dict(
-                game_id = game_id ,
                 index = 'wta.raffle',
+                bool = [
+                    {"game_id":game_id}
+                ],
             ),
             executer = 'wta.executer.opensearch_agent.Query',
         )
@@ -159,12 +165,67 @@ class CalcBetList(Resource):
 
         data = dict(
             initial_param = dict(
-                game_id = game_id ,
                 index = 'wta.calc.bet',
-                filter_conditions = [
+                bool = [
                     {"account_id": account_id},
+                    {"game_id":game_id}
                 ],
-                sort_condition = {"calc_date": "desc"},
+                sort = {"calc_date": "desc"},
+            ),
+            executer = 'wta.executer.opensearch_agent.Query',
+        )
+
+        rtn, rtn_message = ExecuterCaller.instance().execute_command(data)
+
+        if rtn < 0:
+            return rtn_message, status.HTTP_500_INTERNAL_SERVER_ERROR
+        elif rtn == 0:
+            return rtn_message, status.HTTP_204_NO_CONTENT
+
+        return rtn_message, status.HTTP_200_OK
+
+    get.permitted_roles = ["opensearch_agent"]
+
+class LatestFallback(Resource):
+
+    def get(self, game_id):
+
+        data = dict(
+            initial_param = dict(
+                index = 'wta.fallback',
+                bool = [
+                    {"game_id":game_id}
+                ],
+                sort = { "cancel_date": "desc"},
+                size = 1,
+            ),
+            executer = 'wta.executer.opensearch_agent.Query',
+        )
+
+        rtn, rtn_message = ExecuterCaller.instance().execute_command(data)
+        
+        print("## rtn, rtn_message :", rtn, rtn_message)
+        if rtn < 0:
+            return rtn_message, status.HTTP_500_INTERNAL_SERVER_ERROR
+        elif rtn == 0 or not rtn_message['results']:
+            return rtn_message, status.HTTP_204_NO_CONTENT
+        
+        return rtn_message['results'][0], status.HTTP_200_OK
+
+    get.permitted_roles = ["opensearch_agent"]
+
+class Bets2Cancel(Resource):
+
+    def get(self, game_id, base_date):
+
+        data = dict(
+            initial_param = dict(
+                index = 'wta.bet',
+                bool = [
+                    {"game_id":game_id}
+                ],
+                range = {"bet_date": {"gt": base_date}},
+                sort = {"bet_date": "asc"},
             ),
             executer = 'wta.executer.opensearch_agent.Query',
         )
@@ -186,6 +247,10 @@ api.add_resource(LatestCalcBet, '/opensearch/latest_calc_bet/<string:game_id>',\
                   endpoint='latest_calc_bet')
 api.add_resource(LatestRaffle, '/opensearch/latest_raffle/<string:game_id>',\
                   endpoint='latest_raffle')
+api.add_resource(LatestFallback, '/opensearch/latest_fallback/<string:game_id>',\
+                  endpoint='latest_fallback')
+api.add_resource(Bets2Cancel, '/opensearch/bets_to_cancel/<string:game_id>/<string:base_date>',\
+                  endpoint='bets_to_cancel')
 api.add_resource(RaffleList, '/opensearch/raffle_list/<string:game_id>',\
                   endpoint='raffle_list')
 api.add_resource(CalcBetList, '/opensearch/calc_bet_list/<string:game_id>/<string:account_id>',\

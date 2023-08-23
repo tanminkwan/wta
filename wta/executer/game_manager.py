@@ -200,6 +200,19 @@ class End(ExecuterInterface):
                             rest_caller: RESTCaller,
                         ) -> tuple[int, dict]:
         
+        rtn, game_info = _get_game_info()
+
+        if rtn==204:
+            logging.warning("There is no game info")
+        elif rtn != 200:
+            message = "_get_game_info error. rtn : "+str(rtn)
+            logging.error(message)
+            return 0, {"message":message}
+        elif game_info.get('game_status') != 'start':
+            message = "Game status is not valid. game_status : "+game_info.get('game_status')
+            logging.error(message)
+            return 0, {"message":message}
+
         topic = 'wta.game.status'
         now =  datetime.now()
 
@@ -223,6 +236,7 @@ class End(ExecuterInterface):
             game_id=message['game_id'],
             game_name=message['game_name'],
             create_date=message['create_date'],
+            end_date=message['end_date'],
             game_status=message['game_status'],
         )
 

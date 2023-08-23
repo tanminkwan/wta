@@ -1,0 +1,1 @@
+from miniagent import app
