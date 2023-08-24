@@ -1,0 +1,103 @@
+version: '3.8'
+services:
+  opensearch-agent:
+    image: tanminkwan/wta-miniagent:latest
+    container_name: opensearch-agent
+    ports:
+      - 8382:5000
+    environment:
+      DEBUG: true
+      AGENT_NAME: "opensearch_agent"
+      AGENT_ROLES: "opensearch_agent"
+      MESSAGE_RECEIVER_ENABLED :  false
+      ZIPKIN_DOMAIN_NAME: 172.17.0.1
+      ZIPKIN_PORT: 9411
+      ELASTIC_SEARCH_DOMAIN_NAME: 172.17.0.1
+      ELASTIC_SEARCH_PORT: 9200
+  raffle:
+    image: tanminkwan/wta-miniagent:latest
+    container_name: raffle
+    ports:
+      - 8383:5000
+    links:
+      - opensearch-agent
+    environment:
+      DEBUG: true
+      C_GAME_ID: "test"
+      AGENT_NAME: "raffle"
+      AGENT_ROLES: "raffle"
+      MESSAGE_RECEIVER_ENABLED :  true
+      ZIPKIN_DOMAIN_NAME: 172.17.0.1
+      ZIPKIN_PORT: 9411
+      KAFKA_BOOTSTRAP_SERVERS: "172.17.0.1:9092"
+      ELASTICSEARCH_AGENT_SERVICE_ADDRESS: "opensearch-agent:5000"
+  calulator:
+    image: tanminkwan/wta-miniagent:latest
+    container_name: calulator
+    links:
+      - opensearch-agent
+    environment:
+      DEBUG: true
+      AGENT_NAME: "calulator"
+      AGENT_ROLES: "calulator"
+      MESSAGE_RECEIVER_ENABLED :  true
+      ZIPKIN_DOMAIN_NAME: 172.17.0.1
+      ZIPKIN_PORT: 9411
+      KAFKA_BOOTSTRAP_SERVERS: "172.17.0.1:9092"
+      ELASTICSEARCH_AGENT_SERVICE_ADDRESS: "opensearch-agent:5000"
+  betting-booth:
+    image: tanminkwan/banking-miniagent:latest
+    container_name: betting-booth
+    environment:
+      DEBUG: true
+      AGENT_NAME: "betting_booth"
+      AGENT_ROLES: "betting_booth"
+      MESSAGE_RECEIVER_ENABLED :  false
+      ZIPKIN_DOMAIN_NAME: 172.17.0.1
+      ZIPKIN_PORT: 9411
+      KAFKA_BOOTSTRAP_SERVERS: "172.17.0.1:9092"
+  gamer-choi:
+    image: tanminkwan/banking-miniagent:latest
+    container_name: gamer-choi
+    links:
+      - opensearch-agent
+      - betting-booth
+    environment:
+      DEBUG: true
+      AGENT_NAME: "choi"
+      AGENT_ROLES: "betting_agent"
+      ZIPKIN_DOMAIN_NAME: 172.17.0.1
+      ZIPKIN_PORT: 9411
+      ELASTICSEARCH_AGENT_SERVICE_ADDRESS: "opensearch-agent:5000"
+      BETTING_BOOTH_SERVICE_ADDRESS: "betting-booth:5000"
+      C_DEPOSIT_AMOUNT: 53000
+      C_BET_CYCLE_SECS: 30
+      C_BET_AMOUNT: 3000
+      C_START_SECS: 30
+  bonnie:
+    image: tanminkwan/banking-miniagent:latest
+    container_name: client-bonnie
+    links:
+      - event
+      - deposit
+    environment:
+      DEBUG: true
+      AGENT_NAME: "bonnie"
+      AGENT_ROLES: "customer"
+      X_ROLE: "tester"
+      ZIPKIN_DOMAIN_NAME: 172.17.0.1
+      ZIPKIN_PORT: 9411
+      EVENT_SERVICE_ADDRESS: "event:5000"
+      DEPOSIT_SERVICE_ADDRESS: "deposit:5000"
+  john_dillinger:
+    image: tanminkwan/banking-miniagent:latest
+    container_name: client-john_dillinger
+    links:
+      - event
+    environment:
+      DEBUG: true
+      AGENT_NAME: "john_dillinger"
+      AGENT_ROLES: "admin"
+      ZIPKIN_DOMAIN_NAME: 172.17.0.1
+      ZIPKIN_PORT: 9411
+      EVENT_SERVICE_ADDRESS: "event:5000"

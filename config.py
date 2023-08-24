@@ -1,4 +1,5 @@
 import os
+import logging
 from datetime import datetime, timedelta
 from random import randrange
 
@@ -14,7 +15,8 @@ import __main__
 AGENT_NAME = os.environ.get('AGENT_NAME') or \
     os.path.basename(__main__.__file__).rsplit('.',1)[0]
 
-AGENT_ROLES = os.environ.get('AGENT_ROLES') or AGENT_NAME.split('.')[0]
+AGENT_ROLES = os.environ.get('AGENT_ROLES') or \
+    (AGENT_NAME.split('.')[0] if AGENT_NAME not in ['linuxshell_agent','docker_agent'] else 'launcher')
 
 #Infra hosts
 ZIPKIN_DOMAIN_NAME = os.environ.get('ZIPKIN_DOMAIN_NAME') or 'localhost'
@@ -25,9 +27,8 @@ KAFKA_BOOTSTRAP_SERVERS = KAFKA_BOOTSTRAP_SERVERS.split(',')
 ELASTIC_SEARCH_DOMAIN_NAME = os.environ.get('ELASTIC_SEARCH_DOMAIN_NAME') or 'localhost'
 ELASTIC_SEARCH_PORT = os.environ.get('ELASTIC_SEARCH_PORT') or '9200'
 
-print("MESSAGE_RECEIVER_ENABLED : ", MESSAGE_RECEIVER_ENABLED)
-print("AGENT_NAME : ", AGENT_NAME)
-print("AGENT_ROLES : ", AGENT_ROLES)
+logging.warning("AGENT_NAME : "+AGENT_NAME)
+logging.warning("AGENT_ROLES : "+AGENT_ROLES)
 
 CUSTOM_APIS_PATH = "wta.api"
 
@@ -37,7 +38,7 @@ OPENAI_AGENT_SERVICE_ADDRESS  = \
 BETTING_BOOTH_SERVICE_ADDRESS = \
     os.environ.get('BETTING_BOOTH_SERVICE_ADDRESS') or 'localhost:5012'
 K8S_AGENT_SERVICE_ADDRESS     = \
-    os.environ.get('OPENAI_AGENT_SERVICE_ADDRESS') or 'localhost:5013'
+    os.environ.get('K8S_AGENT_SERVICE_ADDRESS') or 'localhost:5013'
 ELASTICSEARCH_AGENT_SERVICE_ADDRESS = \
     os.environ.get('ELASTICSEARCH_AGENT_SERVICE_ADDRESS') or 'localhost:5014'
 GAME_MANAGER_SERVICE_ADDRESS = \
@@ -53,12 +54,18 @@ C_OPENAI_API_KEY = "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"
 #C_GAME_ID = os.environ.get('GAME_ID') or "ec20fee9e8ee42dd92afaca3a89feafd"
 #C_GAME_NAME = os.environ.get('GAME_NAME') or "test_game7"
 C_ACCOUNT_ID = os.environ.get('ACCOUNT_ID') or AGENT_NAME
-C_GAME_USER_NAME = os.environ.get('ACCOUNT_ID') or AGENT_NAME + '_형기'
+C_GAME_USER_NAME = os.environ.get('GAME_USER_NAME') or AGENT_NAME + '_형기'
 C_BET_SEQ = 0
-C_DEPOSIT_AMOUNT = int(os.environ.get('C_DEPOSIT_AMOUNT', str(53000)))
-C_BET_CYCLE_SEC = int(os.environ.get('C_BET_CYCLE_SEC', str(randrange(20, 60, 10))))
-C_BET_AMOUNT = int(os.environ.get('C_BET_AMOUNT', str(randrange(3000, 10000, 1000))))
-C_START_SECS = int(os.environ.get('C_START_SECS', '30'))
+C_DEPOSIT_AMOUNT = int(os.environ.get('DEPOSIT_AMOUNT', str(53000)))
+C_BET_CYCLE_SECS = int(os.environ.get('BET_CYCLE_SECS', str(randrange(20, 60, 10))))
+C_BET_AMOUNT = int(os.environ.get('BET_AMOUNT', str(randrange(3000, 10000, 1000))))
+C_START_SECS = int(os.environ.get('START_SECS', '30'))
+
+logging.warning("C_ACCOUNT_ID : "+C_ACCOUNT_ID)
+logging.warning("C_DEPOSIT_AMOUNT : "+str(C_DEPOSIT_AMOUNT))
+logging.warning("C_BET_CYCLE_SECS : "+str(C_BET_CYCLE_SECS))
+logging.warning("C_BET_AMOUNT : "+str(C_BET_AMOUNT))
+logging.warning("C_START_SECS : "+str(C_START_SECS))
 
 _str_raffle_rule_comon = \
 """
@@ -150,6 +157,14 @@ PREWORK =\
         "executer":"wta.executer.fallback.Prework",
         "agent_roles":["fallback"],
     },
+    {
+        "executer":"wta.executer.game_panel.Prework",
+        "agent_roles":["game_panel"],
+    },
+    {
+        "executer":"wta.executer.service_manager.Prework",
+        "agent_roles":["service_manager"],
+    },
 ]
 
 EXECUTERS_BY_TOPIC =\
@@ -183,7 +198,7 @@ SCHEDULED_JOBS =\
         "trigger":"interval",
         "id":"request_bet",
         "name":"Request Bet",
-        "seconds":C_BET_CYCLE_SEC,
+        "seconds":C_BET_CYCLE_SECS,
         "params":{"bet_amount":C_BET_AMOUNT},
         "start_date":datetime.now()+timedelta(seconds=C_START_SECS),
         "agent_roles":["betting_agent"],

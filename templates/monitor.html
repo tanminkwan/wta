@@ -1,0 +1,64 @@
+<html>
+<head>
+	<title>Page Reload after 4 seconds</title>
+</head>
+<body>
+
+    <h1>Game ID : {{game_id}}</h1>
+    <h1>Account ID : {{account_id}}</h1>
+
+    
+
+</body>
+</html>
+
+<!DOCTYPE html>  
+  
+<html>  
+<head>  
+    <meta name="viewport" content="width=device-width" />  
+	<meta http-equiv="refresh" content="4" />
+    <title>Monitor</title>  
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />  
+    <script src="~/scripts/jquery-3.3.1.min.js"></script>  
+    <script src="~/scripts/bootstrap.min.js"></script>  
+    <link href="~/Content/dataTables.bootstrap4.min.css" rel="stylesheet" />     
+    <script src="~/scripts/jquery.dataTables.min.js"></script>  
+    <script src="~/scripts/dataTables.bootstrap4.min.js"></script>  
+    <script type="text/javascript">  
+        $(document).ready(function () {  
+            $('#dataTable').DataTable({  
+                "ajax": {  
+                    "url": "http://localhost:5014/api/v1/opensearch/calc_bet_list/{{game_id}}/{{account_id}}",  
+                    "type": "GET",  
+                    "datatype": "json"  
+                },  
+                "columns": [  
+                    { "data": "Name" },  
+                    { "data": "Position" },  
+                    { "data": "Office" },  
+                    { "data": "Age" },  
+                    { "data": "Salary" }  
+                ]  
+            });  
+        });           
+    </script>  
+</head>  
+<body>  
+    <div class="container py-4">  
+        <h4 class="text-center text-uppercase">HOW TO RETRIEVE DATA FROM DATABASE USING JQUERY AJAX IN MVC5</h4>  
+        <div id="dataTable_wrapper"></div>  
+        <table id="dataTable" class="table table-bordered table-striped">  
+            <thead>  
+                <tr>  
+                    <th>Name</th>  
+                    <th>Position</th>  
+                    <th>Office</th>  
+                    <th>Age</th>  
+                    <th>Salary</th>  
+                </tr>  
+            </thead>  
+        </table>  
+    </div>  
+</body>  
+</html>  

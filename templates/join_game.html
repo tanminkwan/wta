@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>돈 걸기</title>
+</head>
+<body>
+<p>
+    <label>나의 판돈(억원) :</label>
+    <a id="deposit_amount">50000</a>
+</p>
+<!--form-->
+<p><label>사용자명 :</label>
+<input type="text" name="game_user_name" id="game_user_name"></p>
+<p>
+    <input type="number" id="start_secs" name="start_secs" min="0" max="500" />
+    <label> 초 후 부터</label>
+</p>
+<p>
+    <input type="number" id="bet_cycle_secs" name="bet_cycle_secs" min="10" max="120" />
+    <label> 초 마다</label>
+</p>
+<p>
+    <input type="number" id="bet_amount" name="bet_amount" min="1000" max="50000" />
+    <label> 원 씩 배팅</label>
+</p>
+
+<input type="button" id="submit" value="시작">
+<!--/form-->
+<br><br>
+<div id="message"></div>
+</body>
+<script type="text/javascript" src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="static/md5.min.js"></script>
+<script>
+
+
+$(document).ready(function(){
+
+	$('#submit').click(function(){
+
+		let sendData = {
+            game_user_name : $('#game_user_name').val(),
+			account_id : md5($('#game_user_name').val()),
+	        deposit_amount : parseInt($('#deposit_amount').text()),
+	        start_secs : parseInt($('#start_secs').val()),
+	        bet_cycle_secs : parseInt($('#bet_cycle_secs').val()),
+	        bet_amount : parseInt($('#bet_amount').val())
+        }
+
+        //console.log(sendData)
+
+		$.ajax({
+			type:'post',
+			url:'/api/v1/game_panel/deposit',
+			data:JSON.stringify(sendData),
+            contentType: "application/json; charset=utf-8",
+			dataType:'json',
+			success : function(data){
+				console.log("Hello")
+				console.log(data.message.account_id)
+				$('#message').html("게임 신청이 완료되었습니다. 당신의 account ID 는 "+data.message.account_id+" 입니다.");
+				$('#submit').attr('disabled', true);
+				let url = "/monitor/"+data.message.game_id+"/"+data.message.account_id;
+				location.replace(url)
+			}
+		});
+
+	});
+});
+
+</script>
+</html>
