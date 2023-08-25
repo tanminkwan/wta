@@ -1,64 +1,51 @@
-<html>
+ 
+<html>  
+
 <head>
-	<title>Page Reload after 4 seconds</title>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+	<!--meta http-equiv="refresh" content="20" /-->
+    <title>Monitor</title>  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/themes/redmond/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script>
+    <script>
+
+        var timer = setInterval(getBets, 5000);
+
+        function getBets() {
+
+            $.ajax({
+                type:'get',
+                url:'http://localhost:5014/api/v1/opensearch/calc_bet_list/{{game_id}}/{{account_id}}',
+                contentType: "application/json; charset=utf-8",
+                //dataType:'json',
+                success : function (data) {
+                    console.log(data.results)
+                    $("#grid").jqGrid({
+                        colModel: [
+                            { name: "bet_seq" },
+                            { name: "bet_amount" },
+                            { name: "deposit_balance" },
+                            { name: "account_count" },
+                            { name: "tot_bet_amount" },
+                            { name: "tot_deposit_balance" }
+                        ],
+                        data: data.results
+                    });
+                }
+		    });
+        }
+    
+    </script>
 </head>
 <body>
+    <h2>Game ID : {{game_id}}</h2>
+    <h2>Account ID : {{account_id}}</h2> 
 
-    <h1>Game ID : {{game_id}}</h1>
-    <h1>Account ID : {{account_id}}</h1>
-
-    
-
+<table id="grid"></table>
 </body>
-</html>
-
-<!DOCTYPE html>  
-  
-<html>  
-<head>  
-    <meta name="viewport" content="width=device-width" />  
-	<meta http-equiv="refresh" content="4" />
-    <title>Monitor</title>  
-    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />  
-    <script src="~/scripts/jquery-3.3.1.min.js"></script>  
-    <script src="~/scripts/bootstrap.min.js"></script>  
-    <link href="~/Content/dataTables.bootstrap4.min.css" rel="stylesheet" />     
-    <script src="~/scripts/jquery.dataTables.min.js"></script>  
-    <script src="~/scripts/dataTables.bootstrap4.min.js"></script>  
-    <script type="text/javascript">  
-        $(document).ready(function () {  
-            $('#dataTable').DataTable({  
-                "ajax": {  
-                    "url": "http://localhost:5014/api/v1/opensearch/calc_bet_list/{{game_id}}/{{account_id}}",  
-                    "type": "GET",  
-                    "datatype": "json"  
-                },  
-                "columns": [  
-                    { "data": "Name" },  
-                    { "data": "Position" },  
-                    { "data": "Office" },  
-                    { "data": "Age" },  
-                    { "data": "Salary" }  
-                ]  
-            });  
-        });           
-    </script>  
-</head>  
-<body>  
-    <div class="container py-4">  
-        <h4 class="text-center text-uppercase">HOW TO RETRIEVE DATA FROM DATABASE USING JQUERY AJAX IN MVC5</h4>  
-        <div id="dataTable_wrapper"></div>  
-        <table id="dataTable" class="table table-bordered table-striped">  
-            <thead>  
-                <tr>  
-                    <th>Name</th>  
-                    <th>Position</th>  
-                    <th>Office</th>  
-                    <th>Age</th>  
-                    <th>Salary</th>  
-                </tr>  
-            </thead>  
-        </table>  
-    </div>  
-</body>  
 </html>  

@@ -45,6 +45,11 @@ class Prework(ExecuterInterface):
                     exec(rs['code'], funcs)
                     rs_f = funcs['f']
 
+                    winner_count = 1
+                    if rs.get('winner_count'):
+                        winner_count = rs['winner_count'] \
+                            if isinstance(rs['winner_count'],int) else int(rs['winner_count'])
+
                     RR.append(dict(
                         rule_name= rs['rule_name'],
                         code          = rs['code'],
@@ -52,10 +57,8 @@ class Prework(ExecuterInterface):
                         winning_type  = rs['winning_type'],
                         winning_point = rs['winning_point'] \
                             if isinstance(rs.get('winning_point'),int) else int(rs['winning_point']),
-                        winner_count  = rs['winner_count'] \
-                            if isinstance(rs.get('winner_count'),int) else int(rs['winner_count']),
-                        remaining_winner_count=rs['winner_count'] \
-                            if isinstance(rs.get('winner_count'),int) else int(rs['winner_count']),
+                        winner_count          = winner_count,
+                        remaining_winner_count= winner_count,
                         end_immediately= True if rs.get('end_immediately') and rs['end_immediately']=='true' \
                             else False,
                     ))

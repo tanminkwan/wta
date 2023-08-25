@@ -76,5 +76,4 @@ class Prework(ExecuterInterface):
                 message= message
             )
 
-             
         return -1, result #Set -1 to return code to kill itself after prework
