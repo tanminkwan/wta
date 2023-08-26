@@ -34,21 +34,42 @@
 <script src="static/md5.min.js"></script>
 <script>
 
-
 $(document).ready(function(){
 
+	var account_id = "{{account_id}}";
+	
+	if(account_id){
+		$('#message').html("이미 게임 신청이 완료되었습니다. 당신의 account ID 는 "+account_id+" 입니다.");
+		$('#submit').attr('disabled', true);
+	}
+
 	$('#submit').click(function(){
+
+		let deposit_amount = parseInt($('#deposit_amount').text());
+		let bet_amount = parseInt($('#bet_amount').val());
+		let loopcnt = Math.ceil(deposit_amount/bet_amount);
+		var bet_schedules = []
+		for (var i=0; i<loopcnt; i++) {
+			bet_schedules.push(
+				{
+					bet_amount : parseInt($('#bet_amount').val()),
+					waiting_secs : parseInt($('#bet_cycle_secs').val()) * i
+				}
+			)
+    	}
+		console.log(bet_schedules)
 
 		let sendData = {
             game_user_name : $('#game_user_name').val(),
 			account_id : md5($('#game_user_name').val()),
 	        deposit_amount : parseInt($('#deposit_amount').text()),
-	        start_secs : parseInt($('#start_secs').val()),
-	        bet_cycle_secs : parseInt($('#bet_cycle_secs').val()),
-	        bet_amount : parseInt($('#bet_amount').val())
+	        //start_secs : parseInt($('#start_secs').val()),
+	        //bet_cycle_secs : parseInt($('#bet_cycle_secs').val()),
+	        //bet_amount : parseInt($('#bet_amount').val())
+			bet_schedules : bet_schedules
         }
 
-        //console.log(sendData)
+        console.log(sendData)
 
 		$.ajax({
 			type:'post',
@@ -62,7 +83,7 @@ $(document).ready(function(){
 				$('#message').html("게임 신청이 완료되었습니다. 당신의 account ID 는 "+data.message.account_id+" 입니다.");
 				$('#submit').attr('disabled', true);
 				let url = "/monitor/"+data.message.game_id+"/"+data.message.account_id;
-				location.replace(url)
+				//location.replace(url)
 			}
 		});
 

@@ -11,6 +11,8 @@ COMMAND_RECEIVER_ENABLED = False
 MESSAGE_RECEIVER_ENABLED = \
     os.environ.get('MESSAGE_RECEIVER_ENABLED', 'True').lower() in ('true', '1', 't')
 
+RUN_TYPE = os.environ.get('RUN_TYPE') or 'service'
+
 import __main__
 AGENT_NAME = os.environ.get('AGENT_NAME') or \
     os.path.basename(__main__.__file__).rsplit('.',1)[0]
@@ -27,6 +29,7 @@ KAFKA_BOOTSTRAP_SERVERS = KAFKA_BOOTSTRAP_SERVERS.split(',')
 ELASTIC_SEARCH_DOMAIN_NAME = os.environ.get('ELASTIC_SEARCH_DOMAIN_NAME') or 'localhost'
 ELASTIC_SEARCH_PORT = os.environ.get('ELASTIC_SEARCH_PORT') or '9200'
 
+logging.warning("RUN_TYPE : "+RUN_TYPE)
 logging.warning("AGENT_NAME : "+AGENT_NAME)
 logging.warning("AGENT_ROLES : "+AGENT_ROLES)
 
@@ -57,15 +60,50 @@ C_ACCOUNT_ID = os.environ.get('ACCOUNT_ID') or AGENT_NAME
 C_GAME_USER_NAME = os.environ.get('GAME_USER_NAME') or AGENT_NAME + '_형기'
 C_BET_SEQ = 0
 C_DEPOSIT_AMOUNT = int(os.environ.get('DEPOSIT_AMOUNT', str(53000)))
-C_BET_CYCLE_SECS = int(os.environ.get('BET_CYCLE_SECS', str(randrange(20, 60, 10))))
-C_BET_AMOUNT = int(os.environ.get('BET_AMOUNT', str(randrange(3000, 10000, 1000))))
-C_START_SECS = int(os.environ.get('START_SECS', '30'))
+#C_BET_CYCLE_SECS = int(os.environ.get('BET_CYCLE_SECS', str(randrange(20, 60, 10))))
+#C_BET_AMOUNT = int(os.environ.get('BET_AMOUNT', str(randrange(3000, 10000, 1000))))
+#C_START_SECS = int(os.environ.get('START_SECS', '30'))
+
+if os.environ.get('GAME_START_DATE'):
+    print("# 1")
+    C_GAME_START_DATE = max(datetime.now(), datetime.fromisoformat(os.environ.get('GAME_START_DATE')))
+else:
+    print("# 2")
+    C_GAME_START_DATE = datetime.now()
+
+print("## C_GAME_START_DATE : ",C_GAME_START_DATE)
+
+if os.environ.get('BET_SCHEDULES'):
+    tmp = os.environ.get('BET_SCHEDULES')
+    logging.warning("## BET_SCHEDULES : "+tmp)
+    C_BET_SCHEDULES = eval(tmp)
+    print("## C_BET_SCHEDULES : ", C_BET_SCHEDULES)
+else:
+    C_BET_SCHEDULES =  \
+    [
+        {
+            "bet_amount":10000,
+            "waiting_secs":150
+        },
+        {
+            "bet_amount":20000,
+            "waiting_secs":170
+        },
+        {
+            "bet_amount":30000,
+            "waiting_secs":190
+        },
+        {
+            "bet_amount":40000,
+            "waiting_secs":210
+        },
+    ]
 
 logging.warning("C_ACCOUNT_ID : "+C_ACCOUNT_ID)
 logging.warning("C_DEPOSIT_AMOUNT : "+str(C_DEPOSIT_AMOUNT))
-logging.warning("C_BET_CYCLE_SECS : "+str(C_BET_CYCLE_SECS))
-logging.warning("C_BET_AMOUNT : "+str(C_BET_AMOUNT))
-logging.warning("C_START_SECS : "+str(C_START_SECS))
+#logging.warning("C_BET_CYCLE_SECS : "+str(C_BET_CYCLE_SECS))
+#logging.warning("C_BET_AMOUNT : "+str(C_BET_AMOUNT))
+#logging.warning("C_START_SECS : "+str(C_START_SECS))
 
 _str_raffle_rule_comon = \
 """
@@ -191,17 +229,20 @@ SCHEDULER_TIMEZONE = "Asia/Seoul"
 SCHEDULER_API_ENABLED = True
 #EXIT_AFTER_JOBS = os.getenv("EXIT_AFTER_JOBS", 'false').lower() in ('true', '1', 't')
 EXIT_AFTER_JOBS = True if AGENT_ROLES in ('betting_agent','fallback') else False
-SCHEDULED_JOBS =\
-[
-    {
-        "executer":"wta.executer.betting_agent.RequestBet",
-        "trigger":"interval",
-        "id":"request_bet",
-        "name":"Request Bet",
-        "seconds":C_BET_CYCLE_SECS,
-        "params":{"bet_amount":C_BET_AMOUNT},
-        "start_date":datetime.now()+timedelta(seconds=C_START_SECS),
-        "agent_roles":["betting_agent"],
-    },
-]
+
+bet_schedules = []
+for i, bet_schedule in enumerate(C_BET_SCHEDULES):
+
+    bet_schedules.append(dict(
+        executer="wta.executer.betting_agent.RequestBet",
+        trigger="date",
+        id="request_bet_"+str(i),
+        name="Request Bet #"+str(i),
+        params={"bet_amount":bet_schedule['bet_amount']},
+        run_date=C_GAME_START_DATE + timedelta(seconds = 10 + bet_schedule['waiting_secs']),
+        agent_roles=["betting_agent"],
+    ))
+
+SCHEDULED_JOBS =os.environ.get('SCHEDULED_JOBS') or bet_schedules
+
 # job list : /scheduler/jobs

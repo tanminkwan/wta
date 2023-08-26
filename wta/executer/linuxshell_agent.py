@@ -19,7 +19,7 @@ class LaunchService(ExecuterInterface):
         env_str = ""
         if initial_param.get('env_params'):
             for item, value in list(initial_param['env_params'].items()):
-                env_str += "export "+item.upper()+"="+str(value)+";"
+                env_str += "export "+item.upper()+"=\""+str(value)+"\";"
 
         subprocess.run(["bash","-c",env_str+"python3 "+service+".py &"], stdout=subprocess.DEVNULL)
 

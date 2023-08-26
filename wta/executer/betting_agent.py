@@ -43,7 +43,7 @@ class Prework(ExecuterInterface):
 
             configure['C_DEPOSIT_BALANCE'] = result['deposit_balance']
             configure['C_BET_SEQ'] = result['bet_seq']
-                   
+
         return 1, result
 
 class RequestBet(ExecuterInterface):
@@ -53,15 +53,19 @@ class RequestBet(ExecuterInterface):
                             rest_caller: RESTCaller,
                         ) -> tuple[int, dict]:
         
-        is_lasttime = False
+        #is_lasttime = False
         if not configure.get('C_DEPOSIT_BALANCE'):
            configure['C_DEPOSIT_BALANCE'] = configure['C_DEPOSIT_AMOUNT']
 
-        if configure['C_DEPOSIT_BALANCE'] - configure['C_BET_AMOUNT'] <= 0:
-            is_lasttime = True
+        if configure['C_DEPOSIT_BALANCE'] <= 0:
+
+            return -1, dict(error="Balance is zero.")
+        
+        elif configure['C_DEPOSIT_BALANCE'] - initial_param['bet_amount'] <= 0:
+            #is_lasttime = True
             bet_amount = configure['C_DEPOSIT_BALANCE']
         else:
-            bet_amount = configure['C_BET_AMOUNT']
+            bet_amount = initial_param['bet_amount']
 
         deposit_balance = configure['C_DEPOSIT_BALANCE'] - bet_amount
         bet_seq = configure['C_BET_SEQ'] + 1
@@ -94,8 +98,8 @@ class RequestBet(ExecuterInterface):
             configure['C_BET_SEQ'] = bet_seq
             configure['C_DEPOSIT_BALANCE'] = deposit_balance
 
-            if is_lasttime:
-                from miniagent import scheduler
-                scheduler.remove_job(initial_param['job_id'])
+            #if is_lasttime:
+            #    from miniagent import scheduler
+            #    scheduler.remove_job(initial_param['job_id'])
 
         return rtn, results

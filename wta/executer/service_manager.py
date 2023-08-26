@@ -53,28 +53,33 @@ class Prework(ExecuterInterface):
         
         rtn, game_info = _get_game_info()
 
-        if rtn!=200:
+        if rtn==200:
+
+            configure['C_GAME_ID'] = game_info['game_id']
+            configure['C_GAME_NAME'] = game_info['game_name']
+
+            print("## C_GAME_ID : ", configure['C_GAME_ID'])
+            print("## C_GAME_NAME : ", configure['C_GAME_NAME'])
+            
+        elif rtn == 204:
+            logging.warning("There is no game.")
+        else:
             logging.error("_get_game_info error. rtn : " + str(rtn))
             return -1, {}
 
-        configure['C_GAME_ID'] = game_info['game_id']
-        configure['C_GAME_NAME'] = game_info['game_name']
-
-        print("## C_GAME_ID : ", configure['C_GAME_ID'])
-        print("## C_GAME_NAME : ", configure['C_GAME_NAME'])
-        
         return 1, {} 
 
 class Status(ExecuterInterface):
 
     def _set_env_params(self, service):
 
-        _common_params = dict(
+        _params = dict(
             agent_name = service ,
             agent_roles = service ,
-        )
+            run_type = 'app' if service == 'fallback' else 'service'
+        )       
 
-        return _common_params
+        return _params
 
     def execute_command(self, 
                             initial_param: dict,
@@ -138,7 +143,8 @@ class Deposit(ExecuterInterface):
         service = 'betting_agent'
         env_params.update(
             agent_name='betting_agent.'+env_params['account_id'],
-            agent_roles='betting_agent'
+            agent_roles='betting_agent',
+            run_type = 'job',
         )
 
         launch_info = dict(

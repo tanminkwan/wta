@@ -38,6 +38,11 @@ class Deposit(ExecuterInterface):
         now =  datetime.now()
 
         message = initial_param.copy()
+
+        # dict or list must be converted to string
+        bet_schedules = message.pop('bet_schedules')
+        message.update({'bet_schedules':str(bet_schedules)})
+
         message.update(dict(
             game_id=configure['C_GAME_ID'],
             game_name=configure['C_GAME_NAME'],
