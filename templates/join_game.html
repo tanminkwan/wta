@@ -1,5 +1,15 @@
 <!DOCTYPE html>
 <html>
+	<style>
+		.bar-label {
+		  -webkit-touch-callout: none;
+		  -webkit-user-select: none;
+		  -khtml-user-select: none;
+		  -moz-user-select: none;
+		  -ms-user-select: none;
+		  user-select: none;
+		}
+		</style>
 <head>
 <meta charset="UTF-8">
 <title>돈 걸기</title>
@@ -13,51 +23,87 @@
 <p><label>사용자명 :</label>
 <input type="text" name="game_user_name" id="game_user_name"></p>
 <p>
+    <label>게임 시작 </label>
     <input type="number" id="start_secs" name="start_secs" min="0" max="500" />
-    <label> 초 후 부터</label>
+    <label> 초 후 베팅 시작</label>
 </p>
 <p>
-    <input type="number" id="bet_cycle_secs" name="bet_cycle_secs" min="10" max="120" />
-    <label> 초 마다</label>
+    <label>게임 종료 </label>
+    <input type="number" id="final_secs" name="bet_cycle_secs" min="300" max="600" />
+    <label> 초 전 베팅 종료 </label>
 </p>
 <p>
-    <input type="number" id="bet_amount" name="bet_amount" min="1000" max="50000" />
-    <label> 원 씩 배팅</label>
+    <label>베팅 횟수 지정 </label>
+    <input type="number" id="bet_count" name="bet_count" min="1" max="120" />
 </p>
 
-<input type="button" id="submit" value="시작">
+<input type="button" id="adjust" value="베팅 금액 조정">
 <!--/form-->
+<h3>베팅 금액 조정</h3>
+<svg id="myGraph" width="300px" height="400px">   
+</svg>
+<input type="button" id="join_game" value="게임 참여">
 <br><br>
 <div id="message"></div>
+
+
 </body>
-<script type="text/javascript" src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js" charset="utf-8"></script>
+<script src="https://d3js.org/d3-selection.v1.min.js"></script>  
 <script src="static/md5.min.js"></script>
 <script>
 
+var account_id = "{{account_id}}";
+var deposit_amount = 0;
+var dataSet = [];
+var dataSet2 = [];
+
 $(document).ready(function(){
 
-	var account_id = "{{account_id}}";
-	
 	if(account_id){
 		$('#message').html("이미 게임 신청이 완료되었습니다. 당신의 account ID 는 "+account_id+" 입니다.");
-		$('#submit').attr('disabled', true);
+		$('#adjust').attr('disabled', true);
+		$('#join_game').attr('disabled', true);
 	}
 
-	$('#submit').click(function(){
+	$('#adjust').click(function(){
 
-		let deposit_amount = parseInt($('#deposit_amount').text());
-		let bet_amount = parseInt($('#bet_amount').val());
-		let loopcnt = Math.ceil(deposit_amount/bet_amount);
-		var bet_schedules = []
-		for (var i=0; i<loopcnt; i++) {
-			bet_schedules.push(
+		deposit_amount = parseInt($('#deposit_amount').text());
+
+		let start_secs = parseInt($('#start_secs').val());
+		let final_secs = 600 - parseInt($('#final_secs').val());
+		let bet_count  = parseInt($('#bet_count').val());
+		let range = final_secs - start_secs;
+
+		if(range < 20){
+			alert("베팅 시간 범위가 너무 좁습니다. 베팅 시작과 종료 시간간 간격을 20초 이상 주세요.");
+			return;
+		}
+
+		let cycle = Math.floor(range/bet_count);
+
+		if(cycle < 3){
+			alert("베팅 주기가 너무 짧습니다. 전후 베팅간 3초 이상 간격을 유지해주세요.");
+			return;
+		}
+
+		dataSet = [];
+		for (var i=0; i<bet_count; i++) {
+			dataSet.push(
 				{
-					bet_amount : parseInt($('#bet_amount').val()),
-					waiting_secs : parseInt($('#bet_cycle_secs').val()) * i
+					waiting_secs : cycle * (i + 1),
+					bet_amount : 250
 				}
 			)
     	}
-		console.log(bet_schedules)
+		console.log(dataSet);
+		drawChart();
+	});
+	
+	$('#join_game').click(function(){
+
+		recalc();
 
 		let sendData = {
             game_user_name : $('#game_user_name').val(),
@@ -66,7 +112,7 @@ $(document).ready(function(){
 	        //start_secs : parseInt($('#start_secs').val()),
 	        //bet_cycle_secs : parseInt($('#bet_cycle_secs').val()),
 	        //bet_amount : parseInt($('#bet_amount').val())
-			bet_schedules : bet_schedules
+			bet_schedules : dataSet2
         }
 
         console.log(sendData)
@@ -81,7 +127,8 @@ $(document).ready(function(){
 				console.log("Hello")
 				console.log(data.message.account_id)
 				$('#message').html("게임 신청이 완료되었습니다. 당신의 account ID 는 "+data.message.account_id+" 입니다.");
-				$('#submit').attr('disabled', true);
+				$('#adjust').attr('disabled', true);
+				$('#join_game').attr('disabled', true);
 				let url = "/monitor/"+data.message.game_id+"/"+data.message.account_id;
 				//location.replace(url)
 			}
@@ -89,6 +136,153 @@ $(document).ready(function(){
 
 	});
 });
+
+function drawChart() {
+		
+	var margin = { top: 20, right: 30, bottom: 20, left: 60 };
+	var width = 500 - margin.left - margin.right;
+	var height = 700 - margin.top - margin.bottom;
+
+	var svg = d3.select("#myGraph")
+	  .attr("width", width + margin.left + margin.right)
+	  .attr("height", height + margin.top + margin.bottom)
+	  .append("g")
+	  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	// X axis
+	var x = d3.scaleLinear()
+	  .domain(dataSet.map(function(d) { return d.bet_amount; }))
+	  .range([0, width]);
+	  
+	// Y axis
+	var y = d3.scaleBand()
+		.domain(dataSet.map(function(d) { return d.waiting_secs; }))
+		.range([ 0, height ])
+		.padding(0.1);
+
+	var resizingBar = null;
+		
+	svg.selectAll("rect")
+	  .data(dataSet)
+	  .enter()
+	  .append("rect")
+	  .attr("x", 0)
+	  .attr("y", function(d) { return y(d.waiting_secs); })
+	  .attr("width", function(d, i) {
+		return 250 + "px";
+	  })
+	  .attr("height", y.bandwidth() )
+	//  .attr("height", "20px")
+	  .style("fill", "DarkSeaGreen")
+	  .on("mousedown", function(d, i) {
+		  
+		resizingBar = d3.select(this);
+		
+		var initialWidth = d;
+		var currentVal = event.clientX - 40 - 20;
+		var initialX = event.clientX - margin.left;
+		
+		//$('#bar-label-'+i.toString()).text(currentVal.toString());
+		
+		resizingBar.attr("width", initialX);
+		var key = $('#bar-label-'+i.toString()).text()
+		dataSet[i] = {"waiting_secs":dataSet[i].waiting_secs,"bet_amount":initialX};
+		adjust();
+		
+		function resizeRect() {
+		  var currentVal = event.clientX - 40
+		  var newX = event.clientX - margin.left;
+	//	  if(newX - initialX < 0){
+	//		  return;
+	//	  }
+		  var newWidth = newX + 20;
+	//      var newWidth = Math.max(30, initialWidth + (newX - initialX));
+	//      var newWidth = Math.max(30, (newX - initialX));
+
+		  //$('#bar-label-'+i.toString()).text(currentVal.toString());
+
+		  resizingBar.attr("width", newWidth);
+		  dataSet[i] = {"waiting_secs":dataSet[i].waiting_secs,"bet_amount":newWidth};
+		  adjust();
+		}
+		
+		function stopResizeRect() {
+		  svg.on("mousemove", null).on("mouseup", null);
+		  resizingBar = null;
+		  printDataSet();
+		}
+		
+		svg.on("mousemove", resizeRect).on("mouseup", stopResizeRect).on("mouseout", stopResizeRect);
+	//    svg.on("mouseup", stopResizeRect);
+	  });
+
+	// Append text on bars
+	svg.selectAll(".bar-label")
+	  .data(dataSet)
+	  .enter()
+	  .append("text")
+	  .attr("class", "bar-label")
+	  .attr("id", function(d, i) { return "bar-label-"+i; })
+	  .attr("x", function(d) {
+		return 15; // Adjust the position as needed
+	  })
+	  .attr("y", function(d) {
+		return y(d.waiting_secs) + y.bandwidth() / 2; // Center the text vertically
+	  })
+	  .attr("dy", ".35em") // Fine-tune vertical alignment
+	  .text(function(d) {
+		percent_val = Math.round((1/dataSet.length)*100*10)/10
+		return percent_val.toString()+" %";
+	  });
+
+	svg.selectAll(".bar-label")
+	  .data(dataSet)
+	  .attr("width", function(d, i) {
+		return d.bet_amount + "px";
+	  }); // Set the new width here
+
+	var yAxis = d3.axisLeft(y);
+	//  .tickFormat(function(d,i) { return y(d.key); });
+	  
+	svg.append("g")
+	  .attr("class", "y-axis")
+	  .call(yAxis);
+
+}
+
+function adjust() {
+
+  var total_sum = dataSet.reduce(function(acc, currentValue) {
+  return acc + currentValue.bet_amount;}, 0);
+  
+  $.each(dataSet, function(i, d){
+	  
+	percent_val = Math.round((d.bet_amount/total_sum)*100*10)/10
+	$('#bar-label-'+i.toString()).text(percent_val.toString()+" %");
+	});
+}
+
+function recalc() {
+  dataSet2 = [];
+  var total_sum = dataSet.reduce(function(acc, currentValue) {
+  return acc + currentValue.bet_amount;}, 0);
+
+  $.each(dataSet, function(i, d){
+	dataSet2.push({"waiting_secs":d.waiting_secs, "bet_amount":Math.round((d.bet_amount/total_sum)*deposit_amount)});
+  })
+  var total_sum2 = dataSet2.reduce(function(acc, currentValue) {
+  return acc + currentValue.bet_amount;}, 0);
+  var gap = deposit_amount - total_sum2;
+  if(gap!=0){
+	  dataSet2[0].bet_amount += gap;
+  }
+
+  var total_sum3 = dataSet2.reduce(function(acc, currentValue) {
+  return acc + currentValue.bet_amount;}, 0);
+  console.log(total_sum);
+  console.log(total_sum2);
+  console.log(total_sum3);
+}
 
 </script>
 </html>
