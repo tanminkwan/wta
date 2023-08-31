@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html>
 	<style>
 		.bar-label {
@@ -12,6 +13,7 @@
 		</style>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=450, user-scalable=yes">
 <title>돈 걸기</title>
 </head>
 <body>
@@ -83,8 +85,8 @@ $(document).ready(function(){
 
 		let cycle = Math.floor(range/bet_count);
 
-		if(cycle < 3){
-			alert("베팅 주기가 너무 짧습니다. 전후 베팅간 3초 이상 간격을 유지해주세요.");
+		if(cycle < 5){
+			alert("베팅 주기가 너무 짧습니다. 전후 베팅간 5초 이상 간격을 유지해주세요.");
 			return;
 		}
 
@@ -130,7 +132,7 @@ $(document).ready(function(){
 				$('#adjust').attr('disabled', true);
 				$('#join_game').attr('disabled', true);
 				let url = "/monitor/"+data.message.game_id+"/"+data.message.account_id;
-				//location.replace(url)
+				location.replace(url)
 			}
 		});
 
@@ -209,12 +211,56 @@ function drawChart() {
 		function stopResizeRect() {
 		  svg.on("mousemove", null).on("mouseup", null);
 		  resizingBar = null;
-		  printDataSet();
+		  //printDataSet();
 		}
 		
 		svg.on("mousemove", resizeRect).on("mouseup", stopResizeRect).on("mouseout", stopResizeRect);
 	//    svg.on("mouseup", stopResizeRect);
-	  });
+	  })
+	  .on("touchstart", function(event, d, i) {
+		  
+		  resizingBar = d3.select(this);
+		  
+		  var initialWidth = d;
+		  var touch = event.touches[0];
+		  var currentVal = touch.clientX - 40 - 20;
+		  var initialX = touch.clientX - margin.left;
+		  //var newXValue = xScale.invert(touchX);
+		  //$('#bar-label-'+i.toString()).text(currentVal.toString());
+		  
+		  resizingBar.attr("width", initialX);
+		  var key = $('#bar-label-'+i.toString()).text()
+		  dataSet[i] = {"waiting_secs":dataSet[i].waiting_secs,"bet_amount":initialX};
+		  adjust();
+		  
+		  function resizeRect() {
+
+			var touch = event.touches[0];		  
+			var currentVal = touch.clientX - 40
+			var newX = touch.clientX - margin.left;
+	  //	  if(newX - initialX < 0){
+	  //		  return;
+	  //	  }
+			var newWidth = newX + 20;
+	  //      var newWidth = Math.max(30, initialWidth + (newX - initialX));
+	  //      var newWidth = Math.max(30, (newX - initialX));
+  
+			//$('#bar-label-'+i.toString()).text(currentVal.toString());
+  
+			resizingBar.attr("width", newWidth);
+			dataSet[i] = {"waiting_secs":dataSet[i].waiting_secs,"bet_amount":newWidth};
+			adjust();
+		  }
+		  
+		  function stopResizeRect() {
+			svg.on("touchmove", null).on("touchend", null);
+			resizingBar = null;
+			printDataSet();
+		  }
+		  
+		  svg.on("touchmove", resizeRect).on("touchend", stopResizeRect).on("touchleave", stopResizeRect);
+	  //    svg.on("mouseup", stopResizeRect);
+		});
 
 	// Append text on bars
 	svg.selectAll(".bar-label")

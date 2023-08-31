@@ -214,6 +214,46 @@ class LatestFallback(Resource):
 
     get.permitted_roles = ["opensearch_agent"]
 
+class CurrentStats(Resource):
+
+    def get(self, game_id, account_id):
+        
+        param1 = dict(
+            initial_param = dict(
+                game_id = game_id,
+                account_id = account_id,
+            ),
+            executer = 'wta.executer.opensearch_agent.IndividualStat',
+        )
+
+        rtn, individual_stat = ExecuterCaller.instance().execute_command(param1)
+
+        param2 = dict(
+            initial_param = dict(
+                game_id = game_id,
+            ),
+            executer = 'wta.executer.opensearch_agent.BetSchedules',
+        )
+
+        rtn, bet_schedules = ExecuterCaller.instance().execute_command(param2)
+
+        param3 = dict(
+            initial_param = dict(
+                game_id = game_id,
+            ),
+            executer = 'wta.executer.opensearch_agent.TotStat',
+        )
+
+        rtn, tot_stat = ExecuterCaller.instance().execute_command(param3)
+
+        return dict(
+                    individual_stat = individual_stat,
+                    bet_schedules = bet_schedules['results'],
+                    tot_stat = tot_stat,
+                ), status.HTTP_200_OK
+
+    get.permitted_roles = ["opensearch_agent", "cache"]
+
 class Bets2Cancel(Resource):
 
     def get(self, game_id, base_date):
@@ -257,3 +297,7 @@ api.add_resource(CalcBetList, '/opensearch/calc_bet_list/<string:game_id>/<strin
                   endpoint='calc_bet_list')
 api.add_resource(GameStatus, '/opensearch/game_status/<string:game_id>/<string:game_status>',\
                   endpoint='game_status')
+api.add_resource(CurrentStats, '/opensearch/current_stat/<string:game_id>/<string:account_id>',\
+                  endpoint='current_stat')
+
+

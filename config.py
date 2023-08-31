@@ -65,11 +65,9 @@ C_DEPOSIT_AMOUNT = int(os.environ.get('DEPOSIT_AMOUNT', str(53000)))
 #C_START_SECS = int(os.environ.get('START_SECS', '30'))
 
 if os.environ.get('GAME_START_DATE'):
-    print("# 1")
     C_GAME_START_DATE = max(datetime.now(), datetime.fromisoformat(os.environ.get('GAME_START_DATE')))
 else:
-    print("# 2")
-    C_GAME_START_DATE = datetime.now()
+    C_GAME_START_DATE = datetime.now() + timedelta(seconds = 10)
 
 print("## C_GAME_START_DATE : ",C_GAME_START_DATE)
 
@@ -239,7 +237,7 @@ for i, bet_schedule in enumerate(C_BET_SCHEDULES):
         id="request_bet_"+str(i),
         name="Request Bet #"+str(i),
         params={"bet_amount":bet_schedule['bet_amount']},
-        run_date=C_GAME_START_DATE + timedelta(seconds = 10 + bet_schedule['waiting_secs']),
+        run_date=C_GAME_START_DATE + timedelta(seconds = bet_schedule['waiting_secs']),
         agent_roles=["betting_agent"],
     ))
 

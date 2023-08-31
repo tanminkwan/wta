@@ -40,11 +40,13 @@ class Prework(ExecuterInterface):
             tot['tot_bet_count']      = result.get('tot_bet_count')
             tot['tot_bet_amount']     = result.get('tot_bet_amount')
             tot['tot_deposit_amount'] = result.get('tot_deposit_amount')
+            tot['tot_expected_bet_count'] = result['tot_expected_bet_count'] if result.get('tot_expected_bet_count') else 0
         else:
             tot['accounts']           = set()
             tot['tot_bet_count']      = 0
             tot['tot_bet_amount']     = 0
             tot['tot_deposit_amount'] = 0
+            tot['tot_expected_bet_count'] = 0
 
         tot['account_count']          = len(tot['accounts'])
         tot['tot_deposit_balance']    = tot['tot_deposit_amount'] - tot['tot_bet_amount']
@@ -95,6 +97,7 @@ class Calculator(ExecuterInterface):
         if bet['account_id'] not in stat['accounts']:
             stat['tot_deposit_amount']  += bet['deposit_amount']
             stat['tot_deposit_balance'] += bet['deposit_amount']
+            stat['tot_expected_bet_count'] += bet['expected_bet_count']
             stat['accounts'].add(bet['account_id'])
 
         stat['tot_bet_count']       += 1
@@ -108,6 +111,7 @@ class Calculator(ExecuterInterface):
             tot_bet_amount      = stat['tot_bet_amount'] ,
             tot_deposit_amount  = stat['tot_deposit_amount'] ,
             tot_deposit_balance = stat['tot_deposit_balance'] ,
+            tot_expected_bet_count = stat['tot_expected_bet_count'] ,
             avg_bet_amount_per_account = \
                 round(stat['tot_bet_amount']/len(stat['accounts'])) ,
             avg_bet_amount_per_round = \

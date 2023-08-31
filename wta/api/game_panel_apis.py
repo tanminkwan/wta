@@ -1,11 +1,22 @@
 from flask import request, make_response, render_template, after_this_request
-from miniagent import api, app
+from miniagent import api, app, configure
 from flask_restful import reqparse
 from flask_api import status
 from miniagent.executer import ExecuterCaller
 from miniagent.event_receiver import Resource
 from datetime import datetime, timedelta
-import uuid
+from requests import get
+
+
+@app.route('/api/v1/opensearch/<path:path>')
+def proxy(path):
+
+    print("### path : ", path)
+    url = configure.get('C_SERVICE_ENDPOINT').get('opensearch_agent')    
+
+    print("### url : ", f'http://{url}/opensearch/{path}')
+    
+    return get(f'http://{url}/opensearch/{path}').content
 
 @app.route('/join_game')
 def join_game_page():
@@ -27,7 +38,11 @@ def join_game_page():
 
 @app.route('/monitor/<string:game_id>/<string:account_id>')
 def monitor_page(game_id:str, account_id:str):
-    return render_template('monitor.html', game_id=game_id, account_id=account_id)
+
+    print("## configure['C_GAME_START_DATE'] : ", configure['C_GAME_START_DATE'])
+    game_start_date = configure['C_GAME_START_DATE'].isoformat()
+
+    return render_template('monitor.html', game_id=game_id, account_id=account_id, game_start_date=game_start_date)
 
 class Deposit(Resource):
 

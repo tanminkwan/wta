@@ -84,8 +84,11 @@ class Game(ExecuterInterface):
         configure['C_GAME_NAME']   =initial_param['game_name']
         configure['C_RAFFLE_RULES']=initial_param['raffle_rules']
 
-        signup_date = datetime.strptime(initial_param['signup_date'], "%Y-%m-%dT%H:%M")
-        start_date = datetime.strptime(initial_param['start_date'], "%Y-%m-%dT%H:%M")
+        signup_date = initial_param['signup_date']
+        start_date = initial_param['start_date']
+
+        configure['C_SIGNUP_DATE'] = signup_date
+        configure['C_START_DATE'] = start_date
 
         self._set_start_game_job(signup_date, start_date)
 
@@ -99,6 +102,8 @@ class Game(ExecuterInterface):
         game_info = dict(
             game_id=message['game_id'],
             game_name=message['game_name'],
+            signup_date=message['signup_date'],
+            start_date=message['start_date'],
             create_date=message['create_date'],
             game_status=message['game_status'],
         )
@@ -127,6 +132,8 @@ class Start(ExecuterInterface):
             create_date=now.isoformat(),
             game_id=configure['C_GAME_ID'],
             game_name=configure['C_GAME_NAME'],
+            signup_date=configure['C_SIGNUP_DATE'],
+            start_date=configure['C_START_DATE'],
             game_status=initial_param['game_status'],
             )
 
@@ -236,6 +243,8 @@ class End(ExecuterInterface):
             game_id=message['game_id'],
             game_name=message['game_name'],
             create_date=message['create_date'],
+            signup_date=configure['C_SIGNUP_DATE'],
+            start_date=configure['C_START_DATE'],
             end_date=message['end_date'],
             game_status=message['game_status'],
         )

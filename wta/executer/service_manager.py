@@ -51,13 +51,19 @@ class Prework(ExecuterInterface):
                             initial_param: dict,
                         ) -> tuple[int, dict]:
         
+        configure['C_GAME_ID'] = None
+        configure['C_GAME_NAME'] = None
+        configure['C_GAME_START_DATE'] = None
+
         rtn, game_info = _get_game_info()
 
         if rtn==200:
 
             configure['C_GAME_ID'] = game_info['game_id']
             configure['C_GAME_NAME'] = game_info['game_name']
-
+            configure['C_GAME_START_DATE'] = \
+                datetime.strptime(game_info['start_date'], "%Y-%m-%dT%H:%M")
+            
             print("## C_GAME_ID : ", configure['C_GAME_ID'])
             print("## C_GAME_NAME : ", configure['C_GAME_NAME'])
             
@@ -97,6 +103,8 @@ class Status(ExecuterInterface):
 
         configure['C_GAME_ID'] = game_info['game_id']
         configure['C_GAME_NAME'] = game_info['game_name']
+        configure['C_GAME_START_DATE'] = \
+                datetime.strptime(game_info['start_date'], "%Y-%m-%dT%H:%M")
 
         if initial_param['game_status'] == 'signup':
 
@@ -145,6 +153,7 @@ class Deposit(ExecuterInterface):
             agent_name='betting_agent.'+env_params['account_id'],
             agent_roles='betting_agent',
             run_type = 'job',
+            game_start_date = configure['C_GAME_START_DATE'].isoformat(),
         )
 
         launch_info = dict(

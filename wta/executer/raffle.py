@@ -35,6 +35,7 @@ class Prework(ExecuterInterface):
             
             rtn, result = rest_caller.call_get(url=url)
 
+            print("### game_status url, rtn, result : ", url, rtn, result)
             if rtn == 200:
 
                 configure['C_RAFFLE_RULES'] = []

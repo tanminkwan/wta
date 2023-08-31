@@ -24,6 +24,8 @@ class Prework(ExecuterInterface):
 
         configure['C_GAME_ID'] = game_info['game_id']
         configure['C_GAME_NAME'] = game_info['game_name']
+        configure['C_GAME_START_DATE'] = \
+                datetime.strptime(game_info['start_date'], "%Y-%m-%dT%H:%M")
 
         return 1, {} 
 

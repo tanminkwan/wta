@@ -1,51 +1,396 @@
- 
-<html>  
-
+<!DOCTYPE html>
+<html>
 <head>
+  <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width" />
+  <title>Drawing Shapes and Lines on Canvas</title>
+  <script src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      overflow: hidden;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    #canvasContainer {
+      overflow-y: hidden; /* Disable vertical scrollbar */
+      height: 360px;
+      touch-action: none; /* Disable touch events */
+    }
+    canvas {
+      border: 1px solid #000;
+      display: block;
+    }
+  table {
+    width: 400px;
+    border-collapse: collapse;
+    margin: 0 auto;
+    border: 1px solid #ccc;
+  }
 
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-	<!--meta http-equiv="refresh" content="20" /-->
-    <title>Monitor</title>  
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/themes/redmond/jquery-ui.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script>
-    <script>
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: right;
+  }
 
-        var timer = setInterval(getBets, 5000);
-
-        function getBets() {
-
-            $.ajax({
-                type:'get',
-                url:'http://localhost:5014/api/v1/opensearch/calc_bet_list/{{game_id}}/{{account_id}}',
-                contentType: "application/json; charset=utf-8",
-                //dataType:'json',
-                success : function (data) {
-                    console.log(data.results)
-                    $("#grid").jqGrid({
-                        colModel: [
-                            { name: "bet_seq" },
-                            { name: "bet_amount" },
-                            { name: "deposit_balance" },
-                            { name: "account_count" },
-                            { name: "tot_bet_amount" },
-                            { name: "tot_deposit_balance" }
-                        ],
-                        data: data.results
-                    });
-                }
-		    });
-        }
-    
-    </script>
+  th {
+    background-color: #f2f2f2;
+    text-align: left;
+  }
+</style>
+  </style>
 </head>
 <body>
-    <h2>Game ID : {{game_id}}</h2>
-    <h2>Account ID : {{account_id}}</h2> 
+  <div id="message_countdown"></div>
+  <div>
+    <table id="totalStatTable">
+      <tr>
+        <th colspan="2" id="tot_stat">전체 통계</th>
+      </tr>
+        <tr>
+          <td>베팅잔액</td>
+          <td id="tot_balance">-</td>
+      </tr>
+      <tr>
+          <td>배팅횟수</td>
+          <td id="tot_betCount">-</td>
+      </tr>
+    </table>
+  </div>   
+  <div>
+    <table id="raffleStatsTable">
+      <thead>
+          <tr>
+              <th>당첨구분</th>
+              <th>당첨금</th>
+              <th>당첨자 / 당첨대상</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+  </div>
+  <div id="canvasContainer">
+    <canvas id="myCanvas" width="400" height="4200"></canvas>
+  </div>
+  <div>
+  <table id="individualStatTable">
+    <tr>
+      <th colspan="2" id="my_tot">개인 통계</th>
+    </tr>
+    <tr>
+      <td>베팅잔액</td>
+      <td id="my_balance">-</td>
+    </tr>
+    <tr>
+        <td>배팅횟수</td>
+        <td id="my_betCount">-</td>
+    </tr>
+  </table>
+</div>
+  <script>
 
-<table id="grid"></table>
+    let game_id = "{{game_id}}";
+    let account_id = "{{account_id}}";
+    let game_start_date = "{{game_start_date}}";
+    
+    let p_game_start_date = Date.parse(game_start_date);
+    console.log("p_game_start_date :"+p_game_start_date)
+    const now = new Date();
+    let p_now = Date.parse(now)
+    console.log("p_now :"+p_now)
+    const gap_secs = Math.round((p_now - p_game_start_date)/1000)
+
+    console.log("gap_secs :"+gap_secs)
+
+    let countdown = 0;
+
+    const message_countdown = document.getElementById("message_countdown");
+
+    if(gap_secs<0){
+
+        ////
+        // Get the timer and message elements
+        
+        // Set the countdown duration in seconds
+        const countdownDuration = -gap_secs;
+        
+        countdown = countdownDuration;
+
+        // Function to update the timer display
+        function updateTimer() {
+          const minutes = Math.floor(countdown / 60);
+          const seconds = countdown % 60;
+
+          const minutesDisplay = minutes < 10 ? `0${minutes}` : minutes;
+          const secondsDisplay = seconds < 10 ? `0${seconds}` : seconds;
+
+          message_countdown.textContent = `${minutesDisplay}:${secondsDisplay}` + " 후 게임이 시작됩니다.";
+        }
+
+        // Function to start the countdown
+        function startCountdown() {
+          updateTimer();
+
+          // Update timer display every second
+          const interval = setInterval(() => {
+            countdown--;
+
+            if (countdown === 0) {
+              clearInterval(interval); // Stop the countdown
+              message_countdown.textContent = "00:00 WTA Game started.";
+            } else {
+              updateTimer();
+            }
+          }, 1000);
+
+        }
+
+        // Start the countdown when the page loads
+        startCountdown();
+        ////
+
+    }
+
+    let individual_stat = {};
+    let tot_stat = {};
+    let bet_schedules = [];
+    let raffle_stats = [];
+
+    function fetchData() {
+
+        if(countdown > 0){
+          return;
+        }
+
+        fetch('/api/v1/opensearch/current_stat/'+game_id+'/'+account_id) // Replace 'your_url_here' with the actual URL
+            .then(response => response.json())
+            .then(data => {
+                // Process the retrieved data here
+                console.log(data);
+                individual_stat = data.individual_stat;
+                tot_stat = data.tot_stat.tot_stat;
+                raffle_stats = data.tot_stat.raffle_stats;
+                var tmp = data.bet_schedules;
+                if(tmp.length!=bet_schedules.length){
+                    bet_schedules = tmp; 
+                    updateCanvas();
+                }
+                printStat();
+            })
+                .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+        
+        setCurrent();
+    }
+
+    // Call fetchData every 5 seconds
+    setInterval(fetchData, 5000); // 5000 milliseconds = 5 seconds
+    
+    //setInterval(redrawCanvas, 5000); // 5000 milliseconds = 5 seconds
+    
+    // Get a reference to the canvas element
+    const canvas = document.getElementById("myCanvas");
+    const context = canvas.getContext("2d");
+
+    // Create a D3 selection for the canvas
+    const d3Canvas = d3.select(canvas);
+
+    // Draw horizontal lines at intervals of 60 pixels
+    const lineSpacing = 60;
+    const canvasHeight = canvas.height;
+
+    context.strokeStyle = "gray";
+    context.lineWidth = 1;
+    context.fillStyle = "black";
+    context.font = "14px Arial";
+   
+
+    // Automatically scroll the canvas up by 20 pixels
+    const container = document.getElementById("canvasContainer");
+    let currentScroll = 0;
+    const targetScroll = currentScroll + 4200;
+    const scrollIncrement = 6;
+    const scrollInterval = 1000; // 1 second in milliseconds
+    const borderThickness = 4;
+
+    const scrollUpInterval = setInterval(function() {
+
+      if(countdown > 0){
+          return;
+      }
+      
+      if(currentScroll==0){
+        //let now2 = new Date();
+        //let p_now2 = Date.parse(now2);
+        //let gap_secs2 = Math.round((p_now2 - p_game_start_date)/1000);
+        //currentScroll = gap_secs2 * 5;
+        //console.log("gap_secs2:"+gap_secs2);
+        setCurrent();
+      }
+
+      currentScroll += scrollIncrement;
+      container.scrollTop = currentScroll;
+
+      if (currentScroll >= targetScroll) {
+        clearInterval(scrollUpInterval);
+      }
+
+    }, scrollInterval);
+
+    //move canvas to current position
+    function setCurrent(){
+      var now2 = new Date();
+      var p_now2 = Date.parse(now2);
+      var gap_secs2 = Math.round((p_now2 - p_game_start_date)/1000);
+      currentScroll = gap_secs2 * 6;
+    }
+
+    // Draw shapes based on the dataSet
+    function setShapes(dataItem){
+
+      const game_user_name = dataItem.game_user_name;
+      const bet_schedules = dataItem.bet_schedules;
+      const p_account_id = dataItem.account_id;
+
+      const last3 = p_account_id.slice(-3);
+      const ti = parseInt(last3, 16);
+      const seed = (ti%100)/100;
+      
+      // Generate a random color for the shape
+      const randomColor = "#" + ((seed * 0xaaaaaa + 0x555555) << 0).toString(16);
+
+      const randomShape = seed;
+
+      bet_schedules.forEach((schedule, scheduleIndex) => {
+
+        const waiting_secs = schedule.waiting_secs;
+        const bet_amount = schedule.bet_amount;
+
+        const seed2 = ((ti*waiting_secs)%100)/100;
+        // Set transparency to 50%
+        context.globalAlpha = 0.5;
+
+        // Draw a rectangle as the shape
+        const x = (seed2 * (canvas.width - 100)) + 50; // Random x position
+        const y = waiting_secs * 6;
+
+        var size = 30;
+        if(schedule.bet_amount>5000){
+            size = 30 + Math.round(Math.sqrt(schedule.bet_amount - 5000)/2);
+        }
+
+        const fontsize = size / 4 + 3;
+
+        if (scheduleIndex === bet_schedules.length - 1){
+          context.lineWidth = borderThickness;
+          context.strokeStyle = "red";
+        }
+        // Draw shape title on the shape itself
+        if (randomShape < 0.5) {
+
+            context.beginPath();
+            context.arc(x, y, size/2, 0, 2 * Math.PI);
+            context.stroke();
+            context.fillStyle = randomColor;
+            context.fill();
+            context.closePath();
+
+            context.fillStyle = "black";
+            context.font = fontsize +"px Arial";
+            context.fillText(game_user_name, x - size/2 + size/5, y - size/5);
+            context.fillText(bet_amount, x - size/2 + size/5, y + size/5);
+
+        }else{
+
+            context.fillStyle = randomColor;
+            var tmpY = y - size/2;
+            context.fillRect(x, tmpY, size, size);
+
+            // Draw a border around the shape
+            context.strokeRect(x-1, tmpY -1, size+2, size+2);
+
+            context.fillStyle = "black";
+            context.font = fontsize +"px Arial";
+            //context.fillText(game_user_name, x + 5, tmpY - size/5 + 25);
+            //context.fillText(bet_amount, x + 5, tmpY + size/5 + 25);
+            context.fillText(game_user_name, x + 5, tmpY + size/2);
+            context.fillText(bet_amount, x + 5, tmpY + size/2 + size/3);
+
+        }
+
+        // Reset transparency to 100%
+        context.globalAlpha = 1;
+        context.lineWidth = 1;
+        context.strokeStyle = "black";
+            
+      });
+    }
+
+    function drawLines(){
+      for (let y = lineSpacing; y < canvasHeight; y += lineSpacing) {
+          context.beginPath();
+          context.moveTo(0, y);
+          context.lineTo(canvas.width, y);
+          context.stroke();
+
+          const text = (y / lineSpacing) * 10;
+          context.fillText(text, 5, y - 5);
+        }
+    }
+
+    drawLines();
+
+    function updateCanvas() {
+    
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawLines();
+
+      bet_schedules.forEach((dataItem, index) => {
+
+        setShapes(dataItem);
+
+      });
+
+    }
+
+    function printStat(){
+        // Individual Stat        
+        var my_percent = Math.round((individual_stat.deposit_balance/individual_stat.deposit_amount)*100);
+        document.getElementById("my_balance").textContent = individual_stat.deposit_balance + " / " + individual_stat.deposit_amount + " (" + my_percent + "%)";
+        var betCount_percent = Math.round((individual_stat.bet_count/individual_stat.expected_bet_count)*100);
+        document.getElementById("my_betCount").textContent = individual_stat.bet_count + " / " + individual_stat.expected_bet_count + " (" + betCount_percent + "%)";
+
+        // Total Stat
+        var tot_percent = Math.round((tot_stat.tot_deposit_balance/tot_stat.tot_deposit_amount)*100);
+        document.getElementById("tot_balance").textContent = tot_stat.tot_deposit_balance + " / " + tot_stat.tot_deposit_amount + " (" + tot_percent + "%)";
+        var tot_betCount_percent = Math.round((tot_stat.tot_bet_count/tot_stat.tot_expected_bet_count)*100);
+        document.getElementById("tot_betCount").textContent = tot_stat.tot_bet_count + " / " + tot_stat.tot_expected_bet_count + " (" + tot_betCount_percent + "%)";
+        document.getElementById("tot_stat").textContent = "전체 통계 (참가자수 : "+ tot_stat.account_count + ")";
+
+        const $tableBody = $("#raffleStatsTable tbody");
+
+        // Clear existing rows
+        $tableBody.empty();
+
+        // Add new rows
+        raffle_stats.forEach(stat => {
+        const $row = $("<tr></tr>");
+        const $cell1 = $("<td></td>").text(stat['rule_name']);
+        $row.append($cell1);
+        const $cell2 = $("<td></td>").text(stat['winnings']);
+        $row.append($cell2);
+        const $cell3 = $("<td></td>").text((stat['winner_count'] - stat['remaining_winner_count']) + " / " + stat['winner_count']);
+        $row.append($cell3);
+        $tableBody.append($row);
+        });
+
+    }
+
+  </script>
 </body>
-</html>  
+</html>

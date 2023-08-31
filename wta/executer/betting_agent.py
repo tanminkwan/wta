@@ -79,6 +79,7 @@ class RequestBet(ExecuterInterface):
             bet_amount = bet_amount,
             deposit_balance = deposit_balance,
             deposit_amount  = configure['C_DEPOSIT_AMOUNT'],
+            expected_bet_count = len(configure['C_BET_SCHEDULES']),
         )
 
         print("### param : ", param)
