@@ -1,6 +1,7 @@
 from miniagent import configure
 
 from . import (
+    common_apis,
     game_manager_apis,
     openai_agent_apis,
     betting_booth_apis,

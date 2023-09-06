@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: betting-agent-xxxx
+spec:
+  template:
+    metadata:
+      labels:
+        app: betting-agent-xxxx
+        version: v1
+      annotations:
+        proxy.istio.io/config: |-
+          proxyStatsMatcher:
+            inclusionRegexps:
+            - ".*"
+    spec:
+      containers:
+      - name: betting-agent-xxxx
+        image: tanminkwan/wta-miniagent:latest
+        env:
+          - name: RUN_TYPE
+            value: "JOB"
+          - name: AGENT_NAME
+            value: "betting_agent.xxxx"
+          - name: AGENT_ROLES
+            value: "betting_agent"
+          - name: COMMAND_RECEIVER_ENABLED
+            value: "false"
+          - name: MESSAGE_RECEIVER_ENABLED
+            value: "false"
+          - name: ZIPKIN_DOMAIN_NAME
+            value: zipkin.infra.svc.cluster.local
+          - name: ZIPKIN_PORT
+            value: "29411"
+          - name: ELASTICSEARCH_AGENT_SERVICE_ADDRESS
+            value: opensearch-agent:5000
+          - name: CONFIG_MAP_SERVICE_ADDRESS
+            value: config-map:5000
+      restartPolicy: Never
+    backoffLimit: 4

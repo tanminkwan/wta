@@ -1,0 +1,49 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: calculator-v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calculator
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: calculator
+        version: v1
+      annotations:
+        proxy.istio.io/config: |-
+          proxyStatsMatcher:
+            inclusionRegexps:
+            - ".*"
+    spec:
+      containers:
+      - name: calculator
+        image: tanminkwan/wta-miniagent:latest
+        imagePullPolicy: Always
+        env:
+          - name: RUN_TYPE
+            value: "SERVICE"
+          - name: AGENT_NAME
+            value: "calculator"
+          - name: AGENT_ROLES
+            value: "calculator"
+          - name: COMMAND_RECEIVER_ENABLED
+            value: "false"
+          - name: MESSAGE_RECEIVER_ENABLED
+            value: "true"
+          - name: ZIPKIN_DOMAIN_NAME
+            value: zipkin.infra.svc.cluster.local
+          - name: ZIPKIN_PORT
+            value: "29411"
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            value: kafka.infra.svc.cluster.local:9092
+          - name: ELASTICSEARCH_AGENT_SERVICE_ADDRESS
+            value: opensearch-agent:5000
+          - name: CONFIG_MAP_SERVICE_ADDRESS
+            value: config-map:5000
+        ports:
+          - protocol: TCP
+            containerPort: 5000

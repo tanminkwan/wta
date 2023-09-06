@@ -3,9 +3,83 @@ from miniagent.executer import ExecuterInterface
 from miniagent.adapters.rest_caller import RESTCaller
 from miniagent.adapters.kafka_producer import KafkaProducerAdapter
 import logging
+import yaml
+from pathlib import Path
 
 from datetime import datetime
 from . import _get_url, _get_game_info
+
+def _create_k8s_job(rest_caller, launch_info):
+
+    url = "http://"+_get_url('k8s_agent')+"/k8s/jobs/wta"
+
+    file_name = './k8s/'+launch_info['service']+'-job.yaml'
+
+    yaml_dict = yaml.safe_load(Path(file_name).read_text())
+    job_dict = {"job":yaml_dict}
+
+    try:
+        rtn, result = rest_caller.call_post(
+                            url=url, 
+                            json=job_dict
+                        )
+    except Exception as e:
+        message = "Exception : " + e.__str__()
+        logging.error(message)
+        return -1, {"error":message}
+            
+    if rtn == 200:
+        return 1, result
+    else:
+        return -1, {"error":result}
+
+def _create_k8s_deployment(rest_caller, launch_info):
+
+    url = "http://"+_get_url('k8s_agent')+"/k8s/deployments/wta"
+
+    file_name = './k8s/'+launch_info['service']+'-deployment.yaml'
+
+    yaml_dict = yaml.safe_load(Path(file_name).read_text())
+    deployment_dict = {"deployment":yaml_dict}
+
+    try:
+        rtn, result = rest_caller.call_post(
+                            url=url, 
+                            json=deployment_dict
+                        )
+    except Exception as e:
+        message = "Exception : " + e.__str__()
+        logging.error(message)
+        return -1, {"error":message}
+            
+    if rtn == 200:
+        return 1, result
+    else:
+        return -1, {"error":result}
+
+def _create_k8s_service(rest_caller, launch_info):
+
+    url = "http://"+_get_url('k8s_agent')+"/k8s/services/wta"
+
+    file_name = './k8s/'+launch_info['service']+'-service.yaml'
+
+    yaml_dict = yaml.safe_load(Path(file_name).read_text())
+    service_dict = {"service":yaml_dict}
+
+    try:
+        rtn, result = rest_caller.call_post(
+                            url=url, 
+                            json=service_dict
+                        )
+    except Exception as e:
+        message = "Exception : " + e.__str__()
+        logging.error(message)
+        return -1, {"error":message}
+            
+    if rtn == 200:
+        return 1, result
+    else:
+        return -1, {"error":result}
 
 def _create_service(rest_caller, launch_info):
 
@@ -117,7 +191,12 @@ class Status(ExecuterInterface):
                     env_params = self._set_env_params(service)
                 )
 
-                rtn, result = _create_service(rest_caller, launch_info)
+                if configure['PLATFORM_TYPE']=='k8s':
+                    rtn, result = _create_k8s_deployment(rest_caller, launch_info)
+                    if  service == 'game_panel':
+                        rtn, result = _create_k8s_service(rest_caller, launch_info)
+                else:
+                    rtn, result = _create_service(rest_caller, launch_info)
 
         elif initial_param['game_status'] == 'end':
 
@@ -132,7 +211,10 @@ class Status(ExecuterInterface):
                     env_params = self._set_env_params('fallback')
                 )
 
-            rtn, result = _create_service(rest_caller, launch_info)
+            if configure['PLATFORM_TYPE']=='k8s':
+                rtn, result = _create_k8s_job(rest_caller, launch_info)
+            else:
+                rtn, result = _create_service(rest_caller, launch_info)
 
         return 1, {} 
 
@@ -161,6 +243,9 @@ class Deposit(ExecuterInterface):
             env_params = env_params
         )
 
-        rtn, result = _create_service(rest_caller, launch_info)
+        if configure['PLATFORM_TYPE']=='k8s':
+            rtn, result = _create_k8s_job(rest_caller, launch_info)
+        else:
+            rtn, result = _create_service(rest_caller, launch_info)
         
         return rtn, result

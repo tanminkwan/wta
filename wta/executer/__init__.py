@@ -1,5 +1,6 @@
 from miniagent import configure
 from miniagent.adapters.rest_caller import RESTCaller
+from .opensearch_agent import Query # If it is not declared, error may occure.
 
 def _get_url(agent_name:str):
     return configure.get('C_SERVICE_ENDPOINT').get(agent_name)

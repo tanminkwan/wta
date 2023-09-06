@@ -11,7 +11,8 @@ COMMAND_RECEIVER_ENABLED = False
 MESSAGE_RECEIVER_ENABLED = \
     os.environ.get('MESSAGE_RECEIVER_ENABLED', 'True').lower() in ('true', '1', 't')
 
-RUN_TYPE = os.environ.get('RUN_TYPE') or 'service'
+RUN_TYPE = os.environ.get('RUN_TYPE') or 'service' #service, job, app
+PLATFORM_TYPE = os.environ.get('PLATFORM_TYPE') or 'linux' #k8s, docker, linux
 
 import __main__
 AGENT_NAME = os.environ.get('AGENT_NAME') or \
@@ -41,17 +42,17 @@ CUSTOM_APIS_PATH = "wta.api"
 OPENAI_AGENT_SERVICE_ADDRESS  = \
     os.environ.get('OPENAI_AGENT_SERVICE_ADDRESS') or 'localhost:5011'
 BETTING_BOOTH_SERVICE_ADDRESS = \
-    os.environ.get('BETTING_BOOTH_SERVICE_ADDRESS') or 'localhost:5012'
+    os.environ.get('BETTING_BOOTH_SERVICE_ADDRESS') or 'localhost:8384'#'localhost:5012'
 K8S_AGENT_SERVICE_ADDRESS     = \
     os.environ.get('K8S_AGENT_SERVICE_ADDRESS') or 'localhost:5013'
 ELASTICSEARCH_AGENT_SERVICE_ADDRESS = \
-    os.environ.get('ELASTICSEARCH_AGENT_SERVICE_ADDRESS') or 'localhost:5014'
+    os.environ.get('ELASTICSEARCH_AGENT_SERVICE_ADDRESS') or 'localhost:8381'#'localhost:5014'
 GAME_MANAGER_SERVICE_ADDRESS = \
-    os.environ.get('GAME_MANAGER_SERVICE_ADDRESS') or 'localhost:5015'
+    os.environ.get('GAME_MANAGER_SERVICE_ADDRESS') or 'localhost:8383'#'localhost:5015'
 GAME_PANEL_SERVICE_ADDRESS = \
     os.environ.get('GAME_PANEL_SERVICE_ADDRESS') or 'localhost:5016'
 CONFIG_MAP_SERVICE_ADDRESS = \
-    os.environ.get('CONFIG_MAP_SERVICE_ADDRESS') or 'localhost:5017'
+    os.environ.get('CONFIG_MAP_SERVICE_ADDRESS') or 'localhost:8382'#'localhost:5017'
 
 #Custom defined valuables
 C_OPENAI_API_KEY = "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"

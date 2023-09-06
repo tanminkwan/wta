@@ -7,7 +7,7 @@ from miniagent.event_receiver import Resource
 
 @app.route('/create_game')
 def create_game_page():
-    return render_template('create_game.html')
+    return render_template('create_game2.html')
 
 
 class Game(Resource):

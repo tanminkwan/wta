@@ -4,9 +4,10 @@ services:
     image: tanminkwan/wta-miniagent:latest
     container_name: opensearch-agent
     ports:
-      - 8382:5000
+      - 8381:5000
     environment:
       DEBUG: true
+      RUN_TYPE: "SERVICE"
       AGENT_NAME: "opensearch_agent"
       AGENT_ROLES: "opensearch_agent"
       MESSAGE_RECEIVER_ENABLED :  false
@@ -14,90 +15,69 @@ services:
       ZIPKIN_PORT: 9411
       ELASTIC_SEARCH_DOMAIN_NAME: 172.17.0.1
       ELASTIC_SEARCH_PORT: 9200
-  raffle:
+  config-map:
     image: tanminkwan/wta-miniagent:latest
-    container_name: raffle
+    container_name: config-map
     ports:
-      - 8383:5000
-    links:
-      - opensearch-agent
+      - 8382:5000
     environment:
       DEBUG: true
-      C_GAME_ID: "test"
-      AGENT_NAME: "raffle"
-      AGENT_ROLES: "raffle"
-      MESSAGE_RECEIVER_ENABLED :  true
-      ZIPKIN_DOMAIN_NAME: 172.17.0.1
-      ZIPKIN_PORT: 9411
-      KAFKA_BOOTSTRAP_SERVERS: "172.17.0.1:9092"
-      ELASTICSEARCH_AGENT_SERVICE_ADDRESS: "opensearch-agent:5000"
-  calulator:
-    image: tanminkwan/wta-miniagent:latest
-    container_name: calulator
-    links:
-      - opensearch-agent
-    environment:
-      DEBUG: true
-      AGENT_NAME: "calulator"
-      AGENT_ROLES: "calulator"
-      MESSAGE_RECEIVER_ENABLED :  true
-      ZIPKIN_DOMAIN_NAME: 172.17.0.1
-      ZIPKIN_PORT: 9411
-      KAFKA_BOOTSTRAP_SERVERS: "172.17.0.1:9092"
-      ELASTICSEARCH_AGENT_SERVICE_ADDRESS: "opensearch-agent:5000"
-  betting-booth:
-    image: tanminkwan/banking-miniagent:latest
-    container_name: betting-booth
-    environment:
-      DEBUG: true
-      AGENT_NAME: "betting_booth"
-      AGENT_ROLES: "betting_booth"
+      RUN_TYPE: "SERVICE"
+      AGENT_NAME: "config_map"
+      AGENT_ROLES: "config_map"
       MESSAGE_RECEIVER_ENABLED :  false
       ZIPKIN_DOMAIN_NAME: 172.17.0.1
       ZIPKIN_PORT: 9411
-      KAFKA_BOOTSTRAP_SERVERS: "172.17.0.1:9092"
-  gamer-choi:
-    image: tanminkwan/banking-miniagent:latest
-    container_name: gamer-choi
+  game-manager:
+    image: tanminkwan/wta-miniagent:latest
+    container_name: game-manager
+    ports:
+      - 8383:5000
+    depends_on:
+      - config-map
     links:
       - opensearch-agent
-      - betting-booth
+      - config-map
     environment:
       DEBUG: true
-      AGENT_NAME: "choi"
-      AGENT_ROLES: "betting_agent"
+      RUN_TYPE: "SERVICE"
+      AGENT_NAME: "game_manager"
+      AGENT_ROLES: "game_manager"
+      MESSAGE_RECEIVER_ENABLED :  true
       ZIPKIN_DOMAIN_NAME: 172.17.0.1
       ZIPKIN_PORT: 9411
+      KAFKA_BOOTSTRAP_SERVERS: "172.17.0.1:9092"
       ELASTICSEARCH_AGENT_SERVICE_ADDRESS: "opensearch-agent:5000"
-      BETTING_BOOTH_SERVICE_ADDRESS: "betting-booth:5000"
-      C_DEPOSIT_AMOUNT: 53000
-      C_BET_CYCLE_SECS: 30
-      C_BET_AMOUNT: 3000
-      C_START_SECS: 30
-  bonnie:
-    image: tanminkwan/banking-miniagent:latest
-    container_name: client-bonnie
+      CONFIG_MAP_SERVICE_ADDRESS: "config-map:5000"
+  service-manager:
+    image: tanminkwan/wta-miniagent:latest
+    container_name: service-manager
+    depends_on:
+      - config-map
     links:
-      - event
-      - deposit
+      - config-map
     environment:
       DEBUG: true
-      AGENT_NAME: "bonnie"
-      AGENT_ROLES: "customer"
-      X_ROLE: "tester"
+      RUN_TYPE: "SERVICE"
+      AGENT_NAME: "service_manager"
+      AGENT_ROLES: "service_manager"
+      MESSAGE_RECEIVER_ENABLED :  true
       ZIPKIN_DOMAIN_NAME: 172.17.0.1
       ZIPKIN_PORT: 9411
-      EVENT_SERVICE_ADDRESS: "event:5000"
-      DEPOSIT_SERVICE_ADDRESS: "deposit:5000"
-  john_dillinger:
-    image: tanminkwan/banking-miniagent:latest
-    container_name: client-john_dillinger
-    links:
-      - event
+      KAFKA_BOOTSTRAP_SERVERS: "172.17.0.1:9092"
+      CONFIG_MAP_SERVICE_ADDRESS: "config-map:5000"
+      K8S_AGENT_SERVICE_ADDRESS: "172.17.0.1:5013"
+  betting-booth:
+    image: tanminkwan/wta-miniagent:latest
+    container_name: betting-booth
+    ports:
+      - 8384:5000
     environment:
       DEBUG: true
-      AGENT_NAME: "john_dillinger"
-      AGENT_ROLES: "admin"
+      RUN_TYPE: "SERVICE"
+      AGENT_NAME: "betting_booth"
+      AGENT_ROLES: "betting_booth"
+      MESSAGE_RECEIVER_ENABLED :  true
       ZIPKIN_DOMAIN_NAME: 172.17.0.1
       ZIPKIN_PORT: 9411
-      EVENT_SERVICE_ADDRESS: "event:5000"
+      KAFKA_BOOTSTRAP_SERVERS: "172.17.0.1:9092"

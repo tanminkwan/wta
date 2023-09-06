@@ -15,7 +15,7 @@ class Prework(ExecuterInterface):
         rtn, game_info = _get_game_info()
 
         if rtn!=200:
-            logging.error("_get_game_info error. rtn : ", str(rtn))
+            logging.error("_get_game_info error. rtn : " + str(rtn))
             return -1, {}
 
         if game_info.get('game_status') == 'publish':

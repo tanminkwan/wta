@@ -1,17 +1,19 @@
 from miniagent import app, configure
 
-if configure['RUN_TYPE']=='SERVICE':
+run_type = configure['RUN_TYPE'].upper()
+
+if run_type=='SERVICE':
 
     port=configure.get('PORT') or 5000
     debug=configure.get('DEBUG') or True
 
     app.run(host="0.0.0.0", port=port, use_reloader=False, debug=debug)
 
-elif configure['RUN_TYPE']=='JOB':
+elif run_type=='JOB':
 
     while True:
         pass
 
-elif configure['RUN_TYPE']=='APP':
+elif run_type=='APP':
 
     pass
