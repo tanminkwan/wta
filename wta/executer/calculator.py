@@ -1,10 +1,11 @@
 from miniagent import configure
+from miniagent.common import ExitType
 from miniagent.executer import ExecuterInterface
 from miniagent.adapters.rest_caller import RESTCaller
 from miniagent.adapters.kafka_producer import KafkaProducerAdapter
+from miniagent.common import now
 import logging
 
-from datetime import datetime
 from . import _get_url, _get_game_info
 
 class Prework(ExecuterInterface):
@@ -18,11 +19,11 @@ class Prework(ExecuterInterface):
 
         if rtn!=200:
             logging.error("_get_game_info error. rtn : " + str(rtn))
-            return -1, {}
+            return ExitType.ABNORMAL_EXIT.value, {}
 
         if game_info.get('game_status') == 'end':
             logging.error("Game is over!!")
-            return -1, {}
+            return ExitType.ABNORMAL_EXIT.value, {}
 
         configure['C_GAME_ID'] = game_info['game_id']
         configure['C_GAME_NAME'] = game_info['game_name']
@@ -34,7 +35,6 @@ class Prework(ExecuterInterface):
 
         tot = {}
 
-        print("call opensearch :", rtn, result)
         if rtn == 200 and result.get('accounts'):
             tot['accounts']       = result.get('accounts') 
             tot['tot_bet_count']      = result.get('tot_bet_count')
@@ -92,8 +92,6 @@ class Calculator(ExecuterInterface):
         
         stat = configure['C_STAT']
                
-        now =  datetime.now()
-
         if bet['account_id'] not in stat['accounts']:
             stat['tot_deposit_amount']  += bet['deposit_amount']
             stat['tot_deposit_balance'] += bet['deposit_amount']
@@ -105,7 +103,7 @@ class Calculator(ExecuterInterface):
         stat['tot_deposit_balance'] -= bet['bet_amount']
 
         calculated_dict = dict(
-            calc_date           = now.isoformat() ,
+            calc_date           = now().isoformat() ,
             account_count       = len(stat['accounts']) ,
             tot_bet_count       = stat['tot_bet_count'] ,
             tot_bet_amount      = stat['tot_bet_amount'] ,

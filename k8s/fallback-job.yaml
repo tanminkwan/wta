@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fallback-xxxx
+spec:
+  template:
+    metadata:
+      labels:
+        app: fallback
+        version: v1
+        group: wta-jobs
+    spec:
+      containers:
+      - name: fallback-xxxx
+        image: tanminkwan/wta-miniagent:latest
+        env:
+          - name: RUN_TYPE
+            value: "APP"
+          - name: AGENT_NAME
+            value: "fallback"
+          - name: AGENT_ROLES
+            value: "fallback"
+          - name: COMMAND_RECEIVER_ENABLED
+            value: "false"
+          - name: MESSAGE_RECEIVER_ENABLED
+            value: "false"
+          - name: ZIPKIN_DOMAIN_NAME
+            value: zipkin.infra.svc.cluster.local
+          - name: ZIPKIN_PORT
+            value: "29411"
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            value: kafka.infra.svc.cluster.local:9092
+          - name: ELASTICSEARCH_AGENT_SERVICE_ADDRESS
+            value: opensearch-agent:5000
+          - name: CONFIG_MAP_SERVICE_ADDRESS
+            value: config-map:5000
+      restartPolicy: OnFailure
+    backoffLimit: 4

@@ -4,6 +4,8 @@ from flask_restful import reqparse
 from flask_api import status
 from miniagent.executer import ExecuterCaller
 from miniagent.event_receiver import Resource
+from miniagent.common import local_dt_str
+import logging
 
 @app.route('/create_game')
 def create_game_page():
@@ -51,11 +53,16 @@ class Game(Resource):
                 return {'error':'function_f_not_exists','code':code}, \
                     status.HTTP_400_BAD_REQUEST
 
+        logging.warning('signup_date : '+args['signup_date'])
+        logging.warning('signup_date tz : '+local_dt_str(args['start_date']))
+        logging.warning('start_date : '+args['start_date'])
+        logging.warning('start_date tz : '+local_dt_str(args['start_date']))
+
         data = dict(
             initial_param = dict(
                 game_name = args['game_name'],
-                signup_date = args['signup_date'],
-                start_date = args['start_date'],
+                signup_date = local_dt_str(args['signup_date']),
+                start_date = local_dt_str(args['start_date']),
                 raffle_rules = args['raffle_rules'],
             ),
             executer = 'wta.executer.game_manager.Game',

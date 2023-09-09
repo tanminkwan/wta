@@ -81,7 +81,7 @@ class IndividualStat(ExecuterInterface):
 
         rtn, results = Query().execute_command(params, os_caller)
 
-        if results['results']:
+        if results.get('results'):
             tmp = results['results'][0]
             result = dict(
                 deposit_amount = tmp['deposit_amount'],
@@ -253,7 +253,7 @@ class TotStat(ExecuterInterface):
 
         rtn, results = Query().execute_command(params, os_caller)
 
-        if results['results']:
+        if rtn > 0:
             result = results['results'][0]
         else:
             result = {}

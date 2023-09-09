@@ -7,6 +7,7 @@ from . import (
     betting_booth_apis,
     config_map_apis,
     launcher_apis,
+    static_site_apis,
 )
 
 # Path api/v1/opensearch/ is also used in game_panel_apis

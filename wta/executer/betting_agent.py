@@ -1,4 +1,5 @@
 from miniagent import configure
+from miniagent.common import ExitType
 from miniagent.executer import ExecuterInterface
 from miniagent.adapters.rest_caller import RESTCaller
 import logging
@@ -15,16 +16,16 @@ class Prework(ExecuterInterface):
         rtn, game_info = _get_game_info()
 
         if rtn!=200:
-            logging.error("_get_game_info error. rtn : " + str(rtn))
-            return -1, {}
+            logging.error("_get_game_info error. rtn : " + str(rtn) + "[]" + str(game_info))
+            return ExitType.ABNNORMAL_EXIT.value, {}
 
         if game_info.get('game_status') == 'publish':
             logging.error("The game hasn't started yet!!")
-            return -1, {}
+            return ExitType.ABNNORMAL_EXIT.value, {}
 
         if game_info.get('game_status') == 'end':
             logging.error("Game is over!!")
-            return -1, {}
+            return ExitType.NORMAL_EXIT.value, {}
 
         configure['C_GAME_ID'] = game_info['game_id']
         configure['C_GAME_NAME'] = game_info['game_name']
@@ -39,12 +40,12 @@ class Prework(ExecuterInterface):
 
             if result['deposit_balance'] <= 0:
                 logging.error("deposit_balance is zero.")
-                return -1, {}
+                return ExitType.NORMAL_EXIT.value, {}
 
             configure['C_DEPOSIT_BALANCE'] = result['deposit_balance']
             configure['C_BET_SEQ'] = result['bet_seq']
 
-        return 1, result
+        return ExitType.STAY_RUNNING.value, result
 
 class RequestBet(ExecuterInterface):
 

@@ -1,10 +1,14 @@
 import os
 import logging
 from datetime import datetime, timedelta
+from pytz import timezone
 from random import randrange
 
 #DEBUG
 DEBUG = os.getenv("DEBUG", 'True').lower() in ('true', '1', 't')
+
+#
+TIMEZONE = "Asia/Seoul" 
 
 #
 COMMAND_RECEIVER_ENABLED = False
@@ -68,18 +72,21 @@ C_DEPOSIT_AMOUNT = int(os.environ.get('DEPOSIT_AMOUNT', str(53000)))
 #C_START_SECS = int(os.environ.get('START_SECS', '30'))
 
 if os.environ.get('GAME_START_DATE'):
-    C_GAME_START_DATE = max(datetime.now(), datetime.fromisoformat(os.environ.get('GAME_START_DATE')))
-else:
-    C_GAME_START_DATE = datetime.now() + timedelta(seconds = 10)
 
-print("## C_GAME_START_DATE : ",C_GAME_START_DATE)
+    game_start_date = datetime.fromisoformat(os.environ.get('GAME_START_DATE'))
+    #game_start_date = timezone('Asia/Seoul').localize(tmp)
+
+    C_GAME_START_DATE = max(datetime.now(timezone(TIMEZONE)), game_start_date)
+else:
+    C_GAME_START_DATE = datetime.now(timezone(TIMEZONE)) + timedelta(seconds = 10)
+
+logging.warning("## C_GAME_START_DATE : "+ str(C_GAME_START_DATE))
 
 if os.environ.get('BET_SCHEDULES'):
     tmp = os.environ.get('BET_SCHEDULES')
     logging.warning("## BET_SCHEDULES : "+tmp)
     C_BET_SCHEDULES = eval(tmp)
-    print("## C_BET_SCHEDULES : ", C_BET_SCHEDULES)
-else:
+elif 'betting_agent' in AGENT_ROLES:
     C_BET_SCHEDULES =  \
     [
         {
@@ -226,23 +233,27 @@ EXECUTERS_BY_TOPIC =\
 ]
 
 #Scheduler
-SCHEDULER_TIMEZONE = "Asia/Seoul" 
 SCHEDULER_API_ENABLED = True
 #EXIT_AFTER_JOBS = os.getenv("EXIT_AFTER_JOBS", 'false').lower() in ('true', '1', 't')
 EXIT_AFTER_JOBS = True if AGENT_ROLES in ('betting_agent','fallback') else False
 
 bet_schedules = []
-for i, bet_schedule in enumerate(C_BET_SCHEDULES):
 
-    bet_schedules.append(dict(
-        executer="wta.executer.betting_agent.RequestBet",
-        trigger="date",
-        id="request_bet_"+str(i),
-        name="Request Bet #"+str(i),
-        params={"bet_amount":bet_schedule['bet_amount']},
-        run_date=C_GAME_START_DATE + timedelta(seconds = bet_schedule['waiting_secs']),
-        agent_roles=["betting_agent"],
-    ))
+if 'betting_agent' in AGENT_ROLES:
+    for i, bet_schedule in enumerate(C_BET_SCHEDULES):
+
+        bet_schedules.append(dict(
+            executer="wta.executer.betting_agent.RequestBet",
+            trigger="date",
+            id="request_bet_"+str(i),
+            name="Request Bet #"+str(i),
+            params={"bet_amount":bet_schedule['bet_amount']},
+            run_date=C_GAME_START_DATE + timedelta(seconds = bet_schedule['waiting_secs']),
+            agent_roles=["betting_agent"],
+        ))
+
+    logging.warning('### bet_schedules : ')
+    logging.warning(str(bet_schedules))
 
 SCHEDULED_JOBS =os.environ.get('SCHEDULED_JOBS') or bet_schedules
 

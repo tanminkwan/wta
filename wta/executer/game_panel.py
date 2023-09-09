@@ -1,6 +1,9 @@
 from miniagent import configure
+from miniagent.common import ExitType
 from miniagent.executer import ExecuterInterface
 from miniagent.adapters.kafka_producer import KafkaProducerAdapter
+from miniagent.common import now
+
 import logging
 
 from datetime import datetime
@@ -16,18 +19,18 @@ class Prework(ExecuterInterface):
 
         if rtn!=200:
             logging.error("_get_game_info error. rtn : " + str(rtn))
-            return -1, {}
+            return ExitType.ABNORMAL_EXIT.value, {}
 
         if game_info.get('game_status') == 'end':
             logging.error("Game is over!!")
-            return -1, {}
+            return ExitType.NORMAL_EXIT.value, {}
 
         configure['C_GAME_ID'] = game_info['game_id']
         configure['C_GAME_NAME'] = game_info['game_name']
         configure['C_GAME_START_DATE'] = \
-                datetime.strptime(game_info['start_date'], "%Y-%m-%dT%H:%M")
+                datetime.fromisoformat(game_info['start_date'])
 
-        return 1, {} 
+        return ExitType.STAY_RUNNING.value, {} 
 
 class Deposit(ExecuterInterface):
 
@@ -37,7 +40,6 @@ class Deposit(ExecuterInterface):
                         ) -> tuple[int, dict]:
         
         topic = 'wta.deposit'
-        now =  datetime.now()
 
         message = initial_param.copy()
 
@@ -48,7 +50,7 @@ class Deposit(ExecuterInterface):
         message.update(dict(
             game_id=configure['C_GAME_ID'],
             game_name=configure['C_GAME_NAME'],
-            deposit_date=now.isoformat()),
+            deposit_date=now().isoformat()),
         )
 
         print("## message : ", message)

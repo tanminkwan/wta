@@ -1,9 +1,9 @@
 from miniagent import configure
+from miniagent.common import ExitType
 from miniagent.executer import ExecuterInterface
 from miniagent.adapters.rest_caller import RESTCaller
 from miniagent.adapters.kafka_producer import KafkaProducerAdapter
-
-from datetime import datetime
+from miniagent.common import now
 from time import sleep
 import logging
 from . import _get_url, _get_game_info
@@ -19,11 +19,11 @@ class Prework(ExecuterInterface):
 
         if rtn!=200:
             logging.error("_get_game_info error. rtn : " + str(rtn))
-            return -1, {}
+            return ExitType.ABNORMAL_EXIT.value, {}
 
         if game_info.get('game_status') == 'end':
             logging.error("Game is over!!")
-            return -1, {}
+            return ExitType.NORMAL_EXIT.value, {}
 
         configure['C_GAME_ID'] = game_info['game_id']
         configure['C_GAME_NAME'] = game_info['game_name']
@@ -88,41 +88,8 @@ class Prework(ExecuterInterface):
                 rr["remaining_winner_count"] = status[rr['rule_name']]
 
         print("### configure['C_RAFFLE_RULES'] : ", configure['C_RAFFLE_RULES'])
-        return 1, result
-"""
-class RaffleRule(ExecuterInterface):
+        return ExitType.STAY_RUNNING.value, result
 
-    def execute_command(self, 
-                            initial_param: dict,
-                            producer: KafkaProducerAdapter,
-                        ) -> tuple[int, dict]:
-        
-        topic = 'wta.raffle.rule'
-        
-        if initial_param.get('game_id') != configure.get('C_GAME_ID'):
-            return 0, {'message':'Game Id is wrong.'}
-
-    def _update_raffle_rule(self, raffle_rule:dict) -> dict:
-
-        funcs = {}
-        exec(raffle_rule['code'], funcs)
-        f = funcs['f']
-        raffle_rule['function'] = f
-
-        for rr in configure['C_RAFFLE_RULES']:
-
-            if raffle_rule['rule_name']==rr.get('rule_name') \
-                and rr['remaining_winner_count']>0:
-    
-                rr['code'] = raffle_rule['code']
-                rr['function'] = raffle_rule['function']
-                rr['winning_type'] = raffle_rule['winning_type']
-                rr['winning_point'] = raffle_rule['winning_point']
-                rr['winner_count'] = raffle_rule['winner_count']
-    
-                if rr['winner_count'] < rr['remaining_winner_count']:
-                    rr['remaining_winner_count'] = rr['winner_count']
-"""
 class Raffle(ExecuterInterface):
 
     def execute_command(self, 
@@ -151,7 +118,7 @@ class Raffle(ExecuterInterface):
 
         is_raffled = False        
         
-        calc_bet.update({"winnings":[],"status":[],"raffle_date":datetime.now().isoformat()})
+        calc_bet.update({"winnings":[],"status":[],"raffle_date":now().isoformat()})
 
         for rr in configure['C_RAFFLE_RULES']:
 

@@ -23,17 +23,11 @@ def join_game_page():
     
     account_id = request.cookies.get('wts_game_account_id')
     expires = request.cookies.get('wts_game_account_id_expires')
-    print("expires cookie : ", expires)
-
+    
     if not account_id:
         account_id = ""
     resp = make_response(render_template('join_game.html', account_id=account_id))
-    """
-    expire_date = datetime.now()
-    expire_date = expire_date + timedelta(minutes=10)
     
-    resp.set_cookie('wts_account_id', uuid.uuid4().hex, expires=expire_date)
-    """
     return resp
 
 @app.route('/monitor/<string:game_id>/<string:account_id>')

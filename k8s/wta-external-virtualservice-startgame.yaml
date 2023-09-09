@@ -1,0 +1,66 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: wta-external
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - wta-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api/v1/k8s
+    route:
+    - destination:
+        host: k8sh
+        port:
+          number: 5000
+  - match:
+    - uri:
+        prefix: /api/v1/opensearch
+    route:
+    - destination:
+        host: opensearch-agent
+        port:
+          number: 5000
+  - match:
+    - uri:
+        prefix: /api/v1/game_manager
+    - uri:
+        prefix: /create_game
+    route:
+    - destination:
+        host: game-manager
+        port:
+          number: 5000
+  - match:
+    - uri:
+        prefix: /api/v1/game_panel
+    - uri:
+        prefix: /monitor
+    - uri:
+        prefix: /join_game
+    route:
+    - destination:
+        host: game-panel
+        port:
+          number: 5000
+  - match:
+    - uri:
+        prefix: /static
+    route:
+    - destination:
+        host: static-site
+        port:
+          number: 5000
+  - match:
+    - uri:
+        regex: "^$|^/$"
+    route:
+    - destination:
+        host: game-panel
+        port:
+          number: 5000
+    rewrite:
+      uri: /join_game

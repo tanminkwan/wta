@@ -6,24 +6,34 @@ spec:
   template:
     metadata:
       labels:
-        app: betting-agent-xxxx
+        app: game_user_name
         version: v1
-      annotations:
-        proxy.istio.io/config: |-
-          proxyStatsMatcher:
-            inclusionRegexps:
-            - ".*"
+        group: wta-jobs
     spec:
       containers:
       - name: betting-agent-xxxx
         image: tanminkwan/wta-miniagent:latest
         env:
-          - name: RUN_TYPE
-            value: "JOB"
-          - name: AGENT_NAME
-            value: "betting_agent.xxxx"
-          - name: AGENT_ROLES
-            value: "betting_agent"
+#          - name: RUN_TYPE
+#            value: "JOB"
+#          - name: AGENT_NAME
+#            value: "betting_agent.xxxx"
+#          - name: BET_SCHEDULES
+#            value: "{}"
+#          - name: GAME_ID
+#            value: "aaabbb111"
+#          - name: GAME_NAME
+#            value: "test"
+#          - name: GAME_START_DATE
+#            value: "2023-09-15T12:23:14.22222"
+#          - name: GAME_USER_NAME
+#            value: "kim"
+#          - name: ACCOUNT_ID
+#            value: "acd345"
+#          - name: DEPOSIT_AMOUNT
+#            value: "54000"
+#         - name: AGENT_ROLES
+#           value: "betting_agent"
           - name: COMMAND_RECEIVER_ENABLED
             value: "false"
           - name: MESSAGE_RECEIVER_ENABLED
@@ -36,5 +46,7 @@ spec:
             value: opensearch-agent:5000
           - name: CONFIG_MAP_SERVICE_ADDRESS
             value: config-map:5000
-      restartPolicy: Never
+          - name: BETTING_BOOTH_SERVICE_ADDRESS
+            value: betting-booth:5000
+      restartPolicy: OnFailure
     backoffLimit: 4

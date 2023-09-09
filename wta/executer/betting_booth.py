@@ -1,8 +1,7 @@
 from miniagent import configure
 from miniagent.executer import ExecuterInterface
 from miniagent.adapters.kafka_producer import KafkaProducerAdapter
-
-from datetime import datetime
+from miniagent.common import now
 
 class Bet(ExecuterInterface):
 
@@ -12,10 +11,9 @@ class Bet(ExecuterInterface):
                         ) -> tuple[int, dict]:
         
         topic = 'wta.bet'
-        now =  datetime.now()
-
+        
         message = initial_param.copy()
-        message.update({"bet_date":now.isoformat()})
+        message.update({"bet_date":now().isoformat()})
 
         print("## message : ", message)
 

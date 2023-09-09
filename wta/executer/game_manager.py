@@ -2,10 +2,10 @@ from miniagent import configure
 from miniagent.executer import ExecuterInterface
 from miniagent.adapters.kafka_producer import KafkaProducerAdapter
 from miniagent.adapters.rest_caller import RESTCaller
+from miniagent.common import now, local_dt_str
 
 import uuid
 import logging
-from datetime import datetime, timedelta
 
 from . import _get_url, _get_game_info
 
@@ -78,7 +78,6 @@ class Game(ExecuterInterface):
             return -1, {"message":message}
     
         topic = 'wta.game.status'
-        now =  datetime.now()
 
         configure['C_GAME_ID']     =uuid.uuid4().hex
         configure['C_GAME_NAME']   =initial_param['game_name']
@@ -94,7 +93,7 @@ class Game(ExecuterInterface):
 
         message = initial_param.copy()
         message.update(dict(
-            create_date=now.isoformat(),
+            create_date=now().isoformat(),
             game_id=configure['C_GAME_ID'],
             game_status='publish',
             ))
@@ -124,12 +123,11 @@ class Start(ExecuterInterface):
                         ) -> tuple[int, dict]:
 
         topic = 'wta.game.status'
-        now =  datetime.now()
         if not initial_param.get('game_status'):
             logging.warning('game_status value is empty. Job start is canceled.')
         
         message = dict(
-            create_date=now.isoformat(),
+            create_date=now().isoformat(),
             game_id=configure['C_GAME_ID'],
             game_name=configure['C_GAME_NAME'],
             signup_date=configure['C_SIGNUP_DATE'],
@@ -221,7 +219,6 @@ class End(ExecuterInterface):
             return 0, {"message":message}
 
         topic = 'wta.game.status'
-        now =  datetime.now()
 
         if not self._check_end(initial_param):
             return 0, {'message':'Still Running'}
@@ -234,7 +231,7 @@ class End(ExecuterInterface):
             game_status='end',
             end_date=initial_param['raffle_date'],
             winnings=winnings,
-            create_date=now.isoformat(),
+            create_date=now().isoformat(),
             )
 
         print("## end message : ", message)
