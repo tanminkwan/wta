@@ -3,6 +3,7 @@ from miniagent.executer import ExecuterInterface
 from miniagent.adapters.kafka_producer import KafkaProducerAdapter
 from miniagent.adapters.rest_caller import RESTCaller
 from miniagent.common import now, local_dt_str
+from datetime import datetime
 
 import uuid
 import logging
@@ -39,7 +40,7 @@ class Game(ExecuterInterface):
             "id":"signup",
             "name":"Signup",
             "params":{"game_status":"signup"},
-            "run_date":signup_date,
+            "run_date":datetime.fromisoformat(signup_date),
         }
 
         scheduled_job._run_job(job_signup)
@@ -50,7 +51,7 @@ class Game(ExecuterInterface):
             "id":"start_game",
             "name":"Start Game",
             "params":{"game_status":"start"},
-            "run_date":start_date,
+            "run_date":datetime.fromisoformat(start_date),
         }
 
         scheduled_job._run_job(job_start)
@@ -147,6 +148,11 @@ class End(ExecuterInterface):
 
     def _check_end(self, initial_param):
 
+        # check game timeover param from apscheduler
+        #if initial_param.get('is_timeover'):
+        #    return True
+        
+        # from topic wta.raffle
         status = initial_param['status']
 
         is_ended = False
@@ -171,12 +177,17 @@ class End(ExecuterInterface):
 
             rr_dict = {item["rule_name"]: item for item in configure['C_RAFFLE_RULES']}
         
+            logging.warning("rr_dict : ")
+            logging.warning(str(rr_dict))
+            
             for rr in result['results']:
                 
                 for rule_name in rr['winnings']:
 
                     raffle_rule = rr_dict[rule_name]
-
+                    logging.warning("raffle_rule : ")
+                    logging.warning(str(raffle_rule))
+                    
                     if raffle_rule['winning_point'] <= 0: # Zero winnings
                         continue
 
@@ -213,6 +224,10 @@ class End(ExecuterInterface):
             message = "_get_game_info error. rtn : "+str(rtn)
             logging.error(message)
             return 0, {"message":message}
+        elif game_info.get('game_status') == 'end':
+            message = "Game is already over. game_status : "+game_info.get('game_status')
+            logging.warning(message)
+            return 0, {"message":message}
         elif game_info.get('game_status') != 'start':
             message = "Game status is not valid. game_status : "+game_info.get('game_status')
             logging.error(message)
@@ -232,7 +247,7 @@ class End(ExecuterInterface):
             end_date=initial_param['raffle_date'],
             winnings=winnings,
             create_date=now().isoformat(),
-            )
+        )
 
         print("## end message : ", message)
 

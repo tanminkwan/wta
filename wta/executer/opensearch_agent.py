@@ -18,7 +18,6 @@ class Query(ExecuterInterface):
         
         for q in response['hits']['hits']:
             results.append(q['_source'])
-            rtn = 1
 
         return 1, {"results":results}
 
@@ -127,7 +126,7 @@ class BetSchedules(ExecuterInterface):
             )
 
         rtn, results = Query().execute_command(params, os_caller)
-        return results['results']
+        return results['results'] if results.get('results') else []
 
     def _get_bet_schedules(self, os_caller, game_id):
 
@@ -140,7 +139,7 @@ class BetSchedules(ExecuterInterface):
             )
 
         rtn, results = Query().execute_command(params, os_caller)
-        return results['results']
+        return results['results'] if results.get('results') else []
     
     def _get_bet_starts(self, os_caller, game_id):
 
@@ -154,7 +153,7 @@ class BetSchedules(ExecuterInterface):
             )
 
         rtn, results = Query().execute_command(params, os_caller)
-        return results['results']
+        return results['results'] if results.get('results') else []
     
     def _adjusted_bet_schedules(self, game_info, bet_schedules, bet_starts):
 
@@ -206,6 +205,20 @@ class BetSchedules(ExecuterInterface):
 
 class TotStat(ExecuterInterface):
 
+    def _get_winning_info(self, os_caller, game_id):
+
+        params = \
+            dict(
+                index = 'wta.game.status',
+                bool = [
+                    {"game_id":game_id},
+                    {"game_status":"end"},
+                ]
+            )
+
+        rtn, results = Query().execute_command(params, os_caller)
+        return results['results'][0]['winnings'] if results['results'] else []
+
     def _get_game_info(self, os_caller, game_id):
 
         params = \
@@ -218,7 +231,7 @@ class TotStat(ExecuterInterface):
             )
 
         rtn, results = Query().execute_command(params, os_caller)
-        return results['results']
+        return results['results'] if results.get('results') else []
 
     def _get_last_calc(self, os_caller, game_id):
 
@@ -233,7 +246,7 @@ class TotStat(ExecuterInterface):
 
         rtn, results = Query().execute_command(params, os_caller)
 
-        if results['results']:
+        if rtn > 0:
             result = results['results'][0]
         else:
             result = {}
@@ -260,7 +273,7 @@ class TotStat(ExecuterInterface):
 
         return result
 
-    def _tot_stat(self, game_info, last_calc, last_raffle):
+    def _tot_stat(self, game_info, last_calc, last_raffle, awards):
 
         if not game_info:
             return []
@@ -357,11 +370,11 @@ class TotStat(ExecuterInterface):
                 avg_bet_amount_per_account = 0,
                 avg_bet_amount_per_round = 0,
             )
-
         
         return dict(
             tot_stat=tot_stat,
             raffle_stats=raffle_stats,
+            awards=awards,
         )
 
     def execute_command(self, 
@@ -376,8 +389,8 @@ class TotStat(ExecuterInterface):
         print("$$ last_calc :",last_calc)
         last_raffle   = self._get_last_raffle(os_caller, game_id)
         print("$$ last_calc :",last_raffle)
-
-        tot_stat = self._tot_stat(game_info, last_calc, last_raffle)
+        awards  = self._get_winning_info(os_caller, game_id)
+        tot_stat = self._tot_stat(game_info, last_calc, last_raffle, awards)
         print("$$ tot_stat :",tot_stat)
 
         return 1, tot_stat

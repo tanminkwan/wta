@@ -26,17 +26,22 @@ def join_game_page():
     
     if not account_id:
         account_id = ""
-    resp = make_response(render_template('join_game.html', account_id=account_id))
+    
+    game_duration = configure['C_GAME_DURATION'] if configure.get('C_GAME_DURATION') else 300
+
+
+    resp = make_response(render_template('join_game.html', account_id=account_id , game_duration = game_duration))
     
     return resp
 
-@app.route('/monitor/<string:game_id>/<string:account_id>')
-def monitor_page(game_id:str, account_id:str):
+@app.route('/monitor/<string:account_id>')
+def monitor_page(account_id:str):
 
     print("## configure['C_GAME_START_DATE'] : ", configure['C_GAME_START_DATE'])
     game_start_date = configure['C_GAME_START_DATE'].isoformat()
 
-    return render_template('monitor.html', game_id=game_id, account_id=account_id, game_start_date=game_start_date)
+    return render_template('monitor.html', \
+            game_id=configure['C_GAME_ID'], account_id=account_id, game_start_date=game_start_date)
 
 class Deposit(Resource):
 

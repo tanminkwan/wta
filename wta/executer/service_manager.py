@@ -337,10 +337,17 @@ class Deposit(ExecuterInterface):
             env_params = env_params
         )
 
+        
         if configure['PLATFORM_TYPE']=='k8s':
+
+            app_name = initial_param['game_user_name']
+
+            if not app_name.isascii() or not app_name.isalnum():
+                app_name = initial_param['account_id']
+
             rtn, result = _create_k8s_job(rest_caller, \
                             'betting-agent-'+initial_param['account_id'], \
-                            initial_param['game_user_name'],
+                            app_name,
                             launch_info)
         else:
             rtn, result = _create_service(rest_caller, launch_info)

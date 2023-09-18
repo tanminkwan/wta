@@ -8,7 +8,7 @@ from random import randrange
 DEBUG = os.getenv("DEBUG", 'True').lower() in ('true', '1', 't')
 
 #
-TIMEZONE = "Asia/Seoul" 
+TIMEZONE = "Asia/Seoul"
 
 #
 COMMAND_RECEIVER_ENABLED = False
@@ -80,6 +80,9 @@ if os.environ.get('GAME_START_DATE'):
 else:
     C_GAME_START_DATE = datetime.now(timezone(TIMEZONE)) + timedelta(seconds = 10)
 
+# Game Duration In Seconds
+C_GAME_DURATION = int(os.environ.get('GAME_DURATION', str(300)))
+
 logging.warning("## C_GAME_START_DATE : "+ str(C_GAME_START_DATE))
 
 if os.environ.get('BET_SCHEDULES'):
@@ -126,7 +129,8 @@ def f( bet_seq:int=0,
        tot_bet_amount:int=0, 
        tot_bet_count:int=0, 
        avg_deposit_amount_per_account:int=0, 
-       account_count:int=0):
+       account_count:int=0,
+       elapsed_secs:int=0):
 """
 _str_raffle_rule_1 = \
 _str_raffle_rule_comon + \

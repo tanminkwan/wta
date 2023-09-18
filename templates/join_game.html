@@ -14,32 +14,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=450, user-scalable=yes">
-<title>돈 걸기</title>
+<title>기부 게임</title>
 </head>
 <body>
 <p>
-    <label>나의 판돈(억원) :</label>
+    <label>약정 기부 금액(억원) :</label>
     <a id="deposit_amount">50000</a>
 </p>
 <!--form-->
 <p><label>사용자명 :</label>
 <input type="text" name="game_user_name" id="game_user_name"></p>
+<p> [게임 시간 {{game_duration}} 초 사이 기부 할 구간을 정합니다. ] </p>
 <p>
     <label>게임 시작 </label>
     <input type="number" id="start_secs" name="start_secs" min="0" max="500" />
-    <label> 초 후 베팅 시작</label>
+    <label> 초 후 기부 시작</label>
 </p>
 <p>
     <label>게임 종료 </label>
-    <input type="number" id="final_secs" name="bet_cycle_secs" min="300" max="600" />
-    <label> 초 전 베팅 종료 </label>
+    <input type="number" id="final_secs" name="bet_cycle_secs" min="0" max="{{game_duration}}" />
+    <label> 초 전 기부 종료 </label>
 </p>
 <p>
-    <label>베팅 횟수 지정 </label>
-    <input type="number" id="bet_count" name="bet_count" min="1" max="120" />
+    <label>기부 횟수 지정 (Max : 20) </label>
+    <input type="number" id="bet_count" name="bet_count" min="1" max="20" />
 </p>
 
-<input type="button" id="adjust" value="베팅 금액 조정">
+<input type="button" id="adjust" value="기부 금액 조정">
 <!--/form-->
 <h3>베팅 금액 조정</h3>
 <svg id="myGraph" width="300px" height="400px">   
@@ -53,40 +54,86 @@
 <script src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://d3js.org/d3.v7.min.js" charset="utf-8"></script>
 <script src="https://d3js.org/d3-selection.v1.min.js"></script>  
-<script src="static/md5.min.js"></script>
+<!--script src="static/md5.min.js"></script-->
 <script>
 
 var account_id = "{{account_id}}";
+var game_duration = {{game_duration}} ;
 var deposit_amount = 0;
 var dataSet = [];
 var dataSet2 = [];
 
 $(document).ready(function(){
 
+	$('#join_game').attr('disabled', true);
+
 	if(account_id){
 		$('#message').html("이미 게임 신청이 완료되었습니다. 당신의 account ID 는 "+account_id+" 입니다.");
 		$('#adjust').attr('disabled', true);
 		$('#join_game').attr('disabled', true);
+		location.replace("/monitor/"+account_id)		
 	}
 
 	$('#adjust').click(function(){
 
 		deposit_amount = parseInt($('#deposit_amount').text());
-
+		let game_user_name = $('#game_user_name').val();
 		let start_secs = parseInt($('#start_secs').val());
-		let final_secs = 600 - parseInt($('#final_secs').val());
+		let final_secs = game_duration - parseInt($('#final_secs').val());
 		let bet_count  = parseInt($('#bet_count').val());
 		let range = final_secs - start_secs;
 
-		if(range < 20){
-			alert("베팅 시간 범위가 너무 좁습니다. 베팅 시작과 종료 시간간 간격을 20초 이상 주세요.");
+		if(!game_user_name){
+			alert("사용자명을 입력해주세요.");
+            document.getElementById("game_user_name").focus();
+			return;
+        }
+
+        if(!start_secs){
+			alert("기부시작 값을 입력해주세요.");
+            document.getElementById("start_secs").focus();
+			return;
+        }
+
+        if(!final_secs){
+			alert("기부종료 값을 입력해주세요.");
+            document.getElementById("final_secs").focus();
+			return;
+        }
+
+        if(!bet_count){
+			alert("기부횟수 값을 입력해주세요.");
+            document.getElementById("bet_count").focus();
+			return;
+        }
+
+        if(bet_count > 20){
+			alert("기부횟수 값을 20이하로 조정해주세요");
+            document.getElementById("bet_count").focus();
+			return;
+        }
+
+		if(start_secs > game_duration - 100){
+			alert("기부시작 값이 너무 큽니다." + (game_duration - 100).toString() + "보다 작아야 합니다.");
+            document.getElementById("start_secs").focus();
+			return;
+        }
+
+		if(final_secs < 0){
+			alert("기부종료 값이 너무 큽니다." + (game_duration - 100).toString() + "보다 작아야 합니다.");
+            document.getElementById("final_secs").focus();
+			return;
+        }
+
+		if(range < 100){
+			alert("베팅 시간 범위가 너무 좁습니다. 베팅 시작과 종료 시간간 간격을 100초 이상 주세요.");
 			return;
 		}
 
 		let cycle = Math.floor(range/bet_count);
 
-		if(cycle < 5){
-			alert("베팅 주기가 너무 짧습니다. 전후 베팅간 5초 이상 간격을 유지해주세요.");
+		if(cycle < 10){
+			alert("베팅 주기가 너무 짧습니다. 전후 베팅간 10초 이상 간격을 유지해주세요.");
 			return;
 		}
 
@@ -99,17 +146,31 @@ $(document).ready(function(){
 				}
 			)
     	}
-		console.log(dataSet);
+		//console.log(dataSet);
+		dataSet2 = dataSet;
 		drawChart();
+		$('#join_game').attr('disabled', false);
 	});
 	
+	function generateRandomHex() {
+  		return Math.floor(Math.random() * 16).toString(16);
+	}
+
+	function generateRandom8DigitHex() {
+  		let hexString = '';
+  		for (let i = 0; i < 8; i++) {
+    		hexString += generateRandomHex();
+  		}
+  		return hexString.toLowerCase();
+	}
+
 	$('#join_game').click(function(){
 
 		recalc();
 
 		let sendData = {
             game_user_name : $('#game_user_name').val(),
-			account_id : md5($('#game_user_name').val()),
+			account_id : generateRandom8DigitHex(),
 	        deposit_amount : parseInt($('#deposit_amount').text()),
 	        //start_secs : parseInt($('#start_secs').val()),
 	        //bet_cycle_secs : parseInt($('#bet_cycle_secs').val()),
@@ -131,7 +192,7 @@ $(document).ready(function(){
 				$('#message').html("게임 신청이 완료되었습니다. 당신의 account ID 는 "+data.message.account_id+" 입니다.");
 				$('#adjust').attr('disabled', true);
 				$('#join_game').attr('disabled', true);
-				let url = "/monitor/"+data.message.game_id+"/"+data.message.account_id;
+				let url = "/monitor/"+data.message.account_id;
 				location.replace(url)
 			}
 		});

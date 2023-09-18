@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #f7f7f7;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+
+  th {
+    background-color: #f2f2f2;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+</style>
+<title>게임 최종 결과</title>
+</head>
+<body>
+  <div class="container">
+    <h2>Awards</h2>
+    <table>
+      <tr>
+        <th>순위</th>
+        <th>상금(억원)</th>
+        <th>당첨자</th>
+        <th>기부회차</th>
+        <th>기부금액</th>
+      </tr>
+      <tbody id="awardsTable"></tbody>
+    </table>
+  </div>
+
+  <script>
+    
+    let game_id = "{{game_id}}";
+    const awardsTable = document.getElementById("awardsTable");
+                    
+    const dataSet = [];
+    
+    fetch('/api/v1/opensearch/game_status/'+game_id+'/end') // Replace 'your_url_here' with the actual URL
+            .then(response => response.json())
+            .then(data => {
+                // Process the retrieved data here
+                console.log(data);                
+                data.winnings.forEach(award => {
+                    const row = awardsTable.insertRow();
+                    const c1 = row.insertCell();
+                    const c2 = row.insertCell();
+                    const c3 = row.insertCell();
+                    const c4 = row.insertCell();
+                    const c5 = row.insertCell();
+                    c1.textContent = award["rule_name"];
+                    c2.textContent = award["winnings"].toLocaleString('ko-KR');
+                    c3.textContent = award["game_user_name"];
+                    c4.textContent = award["bet_seq"];
+                    c5.textContent = award["bet_amount"].toLocaleString('ko-KR');
+                    })
+                })
+                .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+
+  </script>
+</body>
+</html>

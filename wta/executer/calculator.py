@@ -4,6 +4,7 @@ from miniagent.executer import ExecuterInterface
 from miniagent.adapters.rest_caller import RESTCaller
 from miniagent.adapters.kafka_producer import KafkaProducerAdapter
 from miniagent.common import now
+from datetime import datetime
 import logging
 
 from . import _get_url, _get_game_info
@@ -27,6 +28,8 @@ class Prework(ExecuterInterface):
 
         configure['C_GAME_ID'] = game_info['game_id']
         configure['C_GAME_NAME'] = game_info['game_name']
+        configure['C_GAME_START_DATE'] = \
+                datetime.fromisoformat(game_info['start_date'])
     
         url = "http://"+_get_url('opensearch_agent')\
                  +"/opensearch/latest_calc_bet/" + configure.get('C_GAME_ID')
@@ -102,8 +105,10 @@ class Calculator(ExecuterInterface):
         stat['tot_bet_amount']      += bet['bet_amount']
         stat['tot_deposit_balance'] -= bet['bet_amount']
 
+        calc_date = now()
+        elapsed_secs = (calc_date - configure['C_GAME_START_DATE']).total_seconds() 
         calculated_dict = dict(
-            calc_date           = now().isoformat() ,
+            calc_date           = calc_date.isoformat() ,
             account_count       = len(stat['accounts']) ,
             tot_bet_count       = stat['tot_bet_count'] ,
             tot_bet_amount      = stat['tot_bet_amount'] ,
@@ -116,6 +121,7 @@ class Calculator(ExecuterInterface):
                 round(stat['tot_bet_amount']/stat['tot_bet_count']) ,
             avg_deposit_amount_per_account = \
                 round(stat['tot_deposit_amount']/len(stat['accounts'])) ,
+            elapsed_secs = elapsed_secs,
         )
 
         calculated_dict.update(bet)

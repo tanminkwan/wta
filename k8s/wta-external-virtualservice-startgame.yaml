@@ -29,6 +29,8 @@ spec:
         prefix: /api/v1/game_manager
     - uri:
         prefix: /create_game
+    - uri:
+        prefix: /awards
     route:
     - destination:
         host: game-manager

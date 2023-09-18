@@ -112,7 +112,8 @@ let default_code1 =
     tot_bet_amount:int=0, 
     tot_bet_count:int=0, 
     avg_deposit_amount_per_account:int=0, 
-    account_count:int=0):
+    account_count:int=0,
+    elapsed_secs:int=0):
     if tot_bet_amount/tot_deposit_amount > 0.9:
         return True
     return False
@@ -129,7 +130,8 @@ let default_code2 =
     tot_bet_amount:int=0, 
     tot_bet_count:int=0, 
     avg_deposit_amount_per_account:int=0, 
-    account_count:int=0):
+    account_count:int=0,
+    elapsed_secs:int=0):
     if deposit_balance == 0:
         return True
     return False
@@ -146,8 +148,64 @@ let default_code3 =
     tot_bet_amount:int=0, 
     tot_bet_count:int=0, 
     avg_deposit_amount_per_account:int=0, 
-    account_count:int=0):
+    account_count:int=0,
+    elapsed_secs:int=0):
     if tot_deposit_balance <= 0:
+        return True
+    return False
+`
+let default_code4 = 
+`def f( bet_seq:int=0, 
+    bet_amount:int=0, 
+    deposit_amount:int=0, 
+    deposit_balance:int=0, 
+    tot_deposit_amount:int=0,
+    tot_deposit_balance:int=0, 
+    avg_bet_amount_per_account:int=0, 
+    avg_bet_amount_per_round:int=0, 
+    tot_bet_amount:int=0, 
+    tot_bet_count:int=0, 
+    avg_deposit_amount_per_account:int=0, 
+    account_count:int=0,
+    elapsed_secs:int=0):
+    if account_count >= 3 and tot_bet_count >= account_count*5 :
+        return True
+    return False
+`
+
+let default_code5 = 
+`def f( bet_seq:int=0, 
+    bet_amount:int=0, 
+    deposit_amount:int=0, 
+    deposit_balance:int=0, 
+    tot_deposit_amount:int=0,
+    tot_deposit_balance:int=0, 
+    avg_bet_amount_per_account:int=0, 
+    avg_bet_amount_per_round:int=0, 
+    tot_bet_amount:int=0, 
+    tot_bet_count:int=0, 
+    avg_deposit_amount_per_account:int=0, 
+    account_count:int=0,
+    elapsed_secs:int=0):
+    if account_count == 1:
+        return True
+    return False
+`
+let default_code6 = 
+`def f( bet_seq:int=0, 
+    bet_amount:int=0, 
+    deposit_amount:int=0, 
+    deposit_balance:int=0, 
+    tot_deposit_amount:int=0,
+    tot_deposit_balance:int=0, 
+    avg_bet_amount_per_account:int=0, 
+    avg_bet_amount_per_round:int=0, 
+    tot_bet_amount:int=0, 
+    tot_bet_count:int=0, 
+    avg_deposit_amount_per_account:int=0, 
+    account_count:int=0,
+    elapsed_secs:int=0):
+    if elapsed_secs >= 600:
         return True
     return False
 `

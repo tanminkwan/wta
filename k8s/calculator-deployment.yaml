@@ -13,6 +13,7 @@ spec:
       labels:
         app: calculator
         version: v1
+        group: wta-deploy
       annotations:
         proxy.istio.io/config: |-
           proxyStatsMatcher:

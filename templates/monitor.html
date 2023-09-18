@@ -18,6 +18,12 @@
       height: 360px;
       touch-action: none; /* Disable touch events */
     }
+    .horizontal-line {
+    width: 400px;
+    height: 2px;
+    border-bottom: 2px solid red;
+    position: absolute;
+    }
     canvas {
       border: 1px solid #000;
       display: block;
@@ -40,7 +46,6 @@
     text-align: left;
   }
 </style>
-  </style>
 </head>
 <body>
   <div id="message_countdown"></div>
@@ -171,6 +176,10 @@
                 // Process the retrieved data here
                 console.log(data);
                 individual_stat = data.individual_stat;
+                awards = data.tot_stat.awards;
+                if(awards.length>0){
+            				location.replace("/awards/"+game_id)
+                }
                 tot_stat = data.tot_stat.tot_stat;
                 raffle_stats = data.tot_stat.raffle_stats;
                 var tmp = data.bet_schedules;
@@ -207,12 +216,11 @@
     context.lineWidth = 1;
     context.fillStyle = "black";
     context.font = "14px Arial";
-   
 
     // Automatically scroll the canvas up by 20 pixels
     const container = document.getElementById("canvasContainer");
     let currentScroll = 0;
-    const targetScroll = currentScroll + 4200;
+    const targetScroll = currentScroll + 4140;
     const scrollIncrement = 6;
     const scrollInterval = 1000; // 1 second in milliseconds
     const borderThickness = 4;
@@ -223,7 +231,7 @@
           return;
       }
       
-      if(currentScroll==0){
+      if(currentScroll==60){
         //let now2 = new Date();
         //let p_now2 = Date.parse(now2);
         //let gap_secs2 = Math.round((p_now2 - p_game_start_date)/1000);
@@ -252,38 +260,44 @@
     // Draw shapes based on the dataSet
     function setShapes(dataItem){
 
-      const game_user_name = dataItem.game_user_name;
-      const bet_schedules = dataItem.bet_schedules;
-      const p_account_id = dataItem.account_id;
+      let game_user_name = dataItem.game_user_name;
+      let bet_schedules = dataItem.bet_schedules;
+      let p_account_id = dataItem.account_id;
 
-      const last3 = p_account_id.slice(-3);
-      const ti = parseInt(last3, 16);
-      const seed = (ti%100)/100;
+      let last3 = p_account_id.slice(-3);
+      let ti = parseInt(last3, 16);
+      let seed = (ti%100)/100;
       
       // Generate a random color for the shape
-      const randomColor = "#" + ((seed * 0xaaaaaa + 0x555555) << 0).toString(16);
+      let randomColor = "#" + ((seed * 0xaaaaaa + 0x555555) << 0).toString(16);
 
-      const randomShape = seed;
+      let randomShape = seed;
 
+      console.log(game_user_name)
+      console.log(p_account_id)
+      console.log(last3)
+      console.log(ti)
+        
       bet_schedules.forEach((schedule, scheduleIndex) => {
 
-        const waiting_secs = schedule.waiting_secs;
-        const bet_amount = schedule.bet_amount;
+        let waiting_secs = schedule.waiting_secs;
+        let bet_amount = schedule.bet_amount;
 
-        const seed2 = ((ti*waiting_secs)%100)/100;
+
+        let seed2 = ((ti*waiting_secs)%100)/100;
         // Set transparency to 50%
         context.globalAlpha = 0.5;
 
         // Draw a rectangle as the shape
-        const x = (seed2 * (canvas.width - 100)) + 50; // Random x position
-        const y = waiting_secs * 6;
+        let x = (seed2 * (canvas.width - 100)) + 50; // Random x position
+        let y = waiting_secs * 6 + 60;
 
         var size = 30;
         if(schedule.bet_amount>5000){
             size = 30 + Math.round(Math.sqrt(schedule.bet_amount - 5000)/2);
         }
 
-        const fontsize = size / 4 + 3;
+        let fontsize = size / 4 + 3;
 
         if (scheduleIndex === bet_schedules.length - 1){
           context.lineWidth = borderThickness;
@@ -330,6 +344,26 @@
       });
     }
 
+    function drawHorizontalLine() {
+        const canvasContainer = document.getElementById('canvasContainer');
+        $('.horizontal-line').remove();
+        const line = document.createElement('div');
+        line.classList.add('horizontal-line');
+        canvasContainer.appendChild(line);
+        
+        function updateLinePosition() {
+            //const topPosition = canvasContainer.offsetTop + canvasContainer.offsetHeight / 2;
+            //const topPosition = canvasContainer.offsetTop + 60;
+            const topPosition = canvasContainer.offsetTop + 60;
+            line.style.top = `${topPosition}px`;            
+        }
+        
+        window.addEventListener('resize', updateLinePosition);
+        updateLinePosition();
+    }
+
+    document.addEventListener('DOMContentLoaded', drawHorizontalLine);
+
     function drawLines(){
       for (let y = lineSpacing; y < canvasHeight; y += lineSpacing) {
           context.beginPath();
@@ -337,7 +371,7 @@
           context.lineTo(canvas.width, y);
           context.stroke();
 
-          const text = (y / lineSpacing) * 10;
+          const text = ((y / lineSpacing) * 10) - 10;
           context.fillText(text, 5, y - 5);
         }
     }
@@ -388,6 +422,8 @@
         $row.append($cell3);
         $tableBody.append($row);
         });
+
+        drawHorizontalLine();
 
     }
 

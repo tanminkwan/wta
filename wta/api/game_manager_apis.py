@@ -11,6 +11,10 @@ import logging
 def create_game_page():
     return render_template('create_game2.html')
 
+@app.route('/awards/<string:game_id>')
+def awards_page(game_id):
+
+    return render_template('awards.html', game_id=game_id)
 
 class Game(Resource):
 
